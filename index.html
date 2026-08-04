@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UploadKit — Secure upload pipelines for Python</title>
+  <meta name="description" content="UploadKit is a modular, framework-independent upload pipeline for Python. Django, FastAPI, and aiohttp supported; Flask coming soon.">
+  <meta name="keywords" content="UploadKit, Python upload, Django upload, FastAPI upload, aiohttp, S3, MinIO, file validation">
+  <meta name="author" content="UploadKit">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#050510">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://uploadkit.github.io/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="UploadKit">
+  <meta property="og:title" content="UploadKit — Secure upload pipelines for Python">
+  <meta property="og:description" content="UploadKit is a modular, framework-independent upload pipeline for Python. Django, FastAPI, and aiohttp supported; Flask coming soon.">
+  <meta property="og:url" content="https://uploadkit.github.io/">
+  <meta property="og:image" content="https://uploadkit.github.io/uploadkit-Fav.png">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="UploadKit — Secure upload pipelines for Python">
+  <meta name="twitter:description" content="UploadKit is a modular, framework-independent upload pipeline for Python. Django, FastAPI, and aiohttp supported; Flask coming soon.">
+  <meta name="twitter:image" content="https://uploadkit.github.io/uploadkit-Fav.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "name": "UploadKit",
+        "url": "https://uploadkit.github.io/",
+        "description": "UploadKit is a modular, framework-independent upload pipeline for Python. Django, FastAPI, and aiohttp supported; Flask coming soon.",
+        "publisher": { "@id": "https://github.com/uploadkit#organization" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "UploadKit",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "programmingLanguage": "Python",
+        "url": "https://uploadkit.github.io/",
+        "downloadUrl": "https://github.com/uploadkit",
+        "description": "Modular, framework-independent secure upload pipelines for Python with Django, FastAPI, and aiohttp integrations.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": { "@id": "https://github.com/uploadkit#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://github.com/uploadkit#organization",
+        "name": "UploadKit",
+        "url": "https://github.com/uploadkit",
+        "logo": "https://uploadkit.github.io/uploadkit-Fav.png"
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/png" href="/uploadkit-Fav.png">
+  <link rel="apple-touch-icon" href="/uploadkit-Fav.png">
+</head>
+<body class="landing-page">
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <header class="site-header">
+    <a class="brand" href="./">UploadKit</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#packages">Packages</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/uploadkit" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">☰</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">UPLOADKIT</p>
+      <h1>
+        <span class="line">Secure uploads</span>
+        <span class="line accent">for Python</span>
+      </h1>
+      <p class="for">
+        Modular upload pipelines — framework-independent core, Django, FastAPI, and aiohttp.
+      </p>
+      <div class="cta-row">
+        <a class="cta" href="/docs/">Read the docs</a>
+        <a class="cta cta-ghost" href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">Core on GitHub</a>
+      </div>
+    </section>
+
+    <section id="packages" class="section">
+      <h2>Packages</h2>
+      <p class="section-lead">Install only what you need. Dependencies point downward toward Core. Guides live in the <a href="/docs/">docs</a>.</p>
+      <ul class="package-list">
+        <li><strong>uploadkit</strong> — pipeline, policies, providers, hooks (Python 3.10+)</li>
+        <li><strong>uploadkit-security</strong> — size, extension, MIME, filename, checksum validators (sync + async)</li>
+        <li><strong>uploadkit-django</strong> — Django adapters and response helpers</li>
+        <li><strong>uploadkit-fastapi</strong> — FastAPI adapters, BackgroundTasks, async/sync helpers</li>
+        <li><strong>uploadkit-testing</strong> — fake storage and fixtures for tests</li>
+      </ul>
+      <p class="section-note">Object storage (AWS S3, MinIO, …) is supplied by your app via <code>boto3</code> / <code>aioboto3</code> — not shipped inside UploadKit packages. MIME detection setup is covered in the <a href="/docs/security/">Security</a> docs.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Built for Python developers</span>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/uploadkit" target="_blank" rel="noopener">github.com/uploadkit</a>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>

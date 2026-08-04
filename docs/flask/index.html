@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flask — UploadKit</title>
+  <meta name="description" content="Flask adapters coming soon.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#050510">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://uploadkit.github.io/docs/flask/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="UploadKit">
+  <meta property="og:title" content="Flask — UploadKit">
+  <meta property="og:description" content="Flask adapters coming soon.">
+  <meta property="og:url" content="https://uploadkit.github.io/docs/flask/">
+  <meta property="og:image" content="https://uploadkit.github.io/uploadkit-Fav.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+  <link href="/pagefind/pagefind-ui.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/uploadkit-Fav.png">
+  <link rel="apple-touch-icon" href="/uploadkit-Fav.png">
+</head>
+<body class="docs-page">
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <header class="site-header">
+    <a class="brand" href="/">UploadKit</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#packages">Packages</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/uploadkit" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">☰</button>
+  </header>
+
+  <button type="button" class="docs-sidebar-toggle" id="docs-sidebar-toggle" aria-expanded="false" aria-controls="docs-sidebar">Menu</button>
+  <div class="docs-sidebar-backdrop" id="docs-sidebar-backdrop"></div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" id="docs-sidebar" aria-label="Docs">
+      <div class="docs-search" id="docs-search"></div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Start</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/">Getting started</a></li>
+        </ul>
+      </div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Reference</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/core/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
+          <li><a href="/docs/patterns/">Common patterns</a></li>
+          <li><a href="/docs/security/">Security</a></li>
+        </ul>
+      </div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Frameworks</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/django/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--django" aria-hidden="true"></span>Django</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/fastapi/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--fastapi" aria-hidden="true"></span>FastAPI</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/aiohttp/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--aiohttp" aria-hidden="true"></span>aiohttp</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/flask/" class="active" aria-current="page"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-soon">Soon</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="docs-main docs-content">
+      <article class="docs-prose" data-pagefind-body>
+
+        <h1>Flask</h1>
+        <p class="section-lead">Flask-specific adapters only. Same ecosystem boundaries as Django and FastAPI.</p>
+        <p class="pkg">uploadkit-flask</p>
+        <p class="section-note">Coming soon — adapters and response helpers only.</p>
+
+      </article>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <span>Built for Python developers</span>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/uploadkit" target="_blank" rel="noopener">github.com/uploadkit</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-clike.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="/pagefind/pagefind-ui.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>

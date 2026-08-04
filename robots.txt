@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://uploadkit.github.io/sitemap.xml

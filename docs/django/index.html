@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Django — UploadKit</title>
+  <meta name="description" content="Django adapters and response helpers for UploadKit.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#050510">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://uploadkit.github.io/docs/django/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="UploadKit">
+  <meta property="og:title" content="Django — UploadKit">
+  <meta property="og:description" content="Django adapters and response helpers for UploadKit.">
+  <meta property="og:url" content="https://uploadkit.github.io/docs/django/">
+  <meta property="og:image" content="https://uploadkit.github.io/uploadkit-Fav.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+  <link href="/pagefind/pagefind-ui.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/uploadkit-Fav.png">
+  <link rel="apple-touch-icon" href="/uploadkit-Fav.png">
+</head>
+<body class="docs-page">
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <header class="site-header">
+    <a class="brand" href="/">UploadKit</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#packages">Packages</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/uploadkit" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">☰</button>
+  </header>
+
+  <button type="button" class="docs-sidebar-toggle" id="docs-sidebar-toggle" aria-expanded="false" aria-controls="docs-sidebar">Menu</button>
+  <div class="docs-sidebar-backdrop" id="docs-sidebar-backdrop"></div>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" id="docs-sidebar" aria-label="Docs">
+      <div class="docs-search" id="docs-search"></div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Start</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/">Getting started</a></li>
+        </ul>
+      </div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Reference</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/core/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
+          <li><a href="/docs/patterns/">Common patterns</a></li>
+          <li><a href="/docs/security/">Security</a></li>
+        </ul>
+      </div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Frameworks</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/django/" class="active" aria-current="page"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--django" aria-hidden="true"></span>Django</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/fastapi/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--fastapi" aria-hidden="true"></span>FastAPI</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/aiohttp/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--aiohttp" aria-hidden="true"></span>aiohttp</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/flask/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-soon">Soon</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="docs-main docs-content">
+      <article class="docs-prose" data-pagefind-body>
+
+        <h1>Django</h1>
+        <p class="section-lead">Thin integration over Core. Pair with <code>uploadkit-security</code> for the default validator stack. Python 3.10–3.13, Django 4.2+.</p>
+
+        <h2>Install</h2>
+          <div class="tabs nested-tabs install-tabs" data-tabs="install-django">
+            <div class="tab-bar" role="tablist" aria-label="Install with">
+              <button type="button" class="tab-btn active" data-tab="install-django-pip" role="tab" aria-selected="true">pip</button>
+              <button type="button" class="tab-btn" data-tab="install-django-uv" role="tab" aria-selected="false">uv</button>
+              <button type="button" class="tab-btn" data-tab="install-django-poetry" role="tab" aria-selected="false">poetry</button>
+            </div>
+            <div id="install-django-pip" class="tab-panel active" role="tabpanel">
+          <figure class="code-block code-block--console">
+            <figcaption class="code-block-caption">
+              <code>Shell</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-bash">pip install uploadkit-django uploadkit-security</code></pre>
+            </div>
+          </figure>
+            </div>
+            <div id="install-django-uv" class="tab-panel" role="tabpanel">
+          <figure class="code-block code-block--console">
+            <figcaption class="code-block-caption">
+              <code>Shell</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-bash">uv add uploadkit-django uploadkit-security</code></pre>
+            </div>
+          </figure>
+            </div>
+            <div id="install-django-poetry" class="tab-panel" role="tabpanel">
+          <figure class="code-block code-block--console">
+            <figcaption class="code-block-caption">
+              <code>Shell</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-bash">poetry add uploadkit-django uploadkit-security</code></pre>
+            </div>
+          </figure>
+            </div>
+          </div>
+
+        <h2>Adapter glue</h2>
+        <p class="section-note">Policy setup, validators, <code>UploaderError</code>, and the JSON response shape are shared — see <a href="/docs/patterns/">Common patterns</a>.</p>
+
+        <div class="tabs nested-tabs" data-tabs="django-inner">
+          <div class="tab-bar" role="tablist" aria-label="Django examples">
+            <button type="button" class="tab-btn active" data-tab="tab-view" role="tab" aria-selected="true">View</button>
+            <button type="button" class="tab-btn" data-tab="tab-settings" role="tab" aria-selected="false">Settings</button>
+          </div>
+
+          <div id="tab-view" class="tab-panel active" role="tabpanel">
+            <p class="section-note">Uses <code>get_storage_provider()</code> → <code>Boto3S3Storage</code> (AWS S3 or MinIO) and <code>as_uploadable()</code>.</p>
+          <figure class="code-block">
+            <figcaption class="code-block-caption">
+              <code>views.py</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-python">from django.conf import settings
+from django.http import JsonResponse
+from uploadkit import Uploader, UploadPolicy, UploaderError
+from uploadkit_django import as_uploadable, get_storage_provider, json_error_response
+from uploadkit_security import default_validators
+
+def upload_view(request):
+    storage = get_storage_provider()
+    policy = UploadPolicy(
+        max_size=5 * 1024 * 1024,
+        allowed_extensions=frozenset({"png"}),
+        allowed_mime_types=frozenset({"image/png"}),
+        validators=default_validators(),
+    )
+    uploaded = request.FILES["file"]
+    try:
+        result = Uploader(policy, storage).upload(
+            as_uploadable(uploaded),
+            bucket=settings.UPLOADKIT_BUCKET,
+            object_name=uploaded.name,
+        )
+    except UploaderError as exc:
+        return json_error_response(exc)
+    return JsonResponse({
+        "object_name": result.object_name,
+        "sha256": result.sha256,
+        "etag": result.etag,
+    })</code></pre>
+            </div>
+          </figure>
+          </div>
+
+          <div id="tab-settings" class="tab-panel" role="tabpanel">
+            <p class="section-note">AWS: leave <code>AWS_S3_ENDPOINT_URL</code> unset. MinIO: set it to your endpoint.</p>
+          <figure class="code-block">
+            <figcaption class="code-block-caption">
+              <code>settings.py + storage.py</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-python"># settings.py — AWS S3
+AWS_ACCESS_KEY_ID = "AKIA..."
+AWS_SECRET_ACCESS_KEY = "..."
+AWS_S3_REGION_NAME = "eu-west-1"
+UPLOADKIT_STORAGE_PROVIDER = "myapp.storage.get_provider"
+UPLOADKIT_BUCKET = "my-prod-bucket"
+
+# settings.py — MinIO (instead of / in addition to keys)
+# AWS_S3_ENDPOINT_URL = "http://127.0.0.1:9000"
+# AWS_ACCESS_KEY_ID = "minioadmin"
+# AWS_SECRET_ACCESS_KEY = "minioadmin"
+
+# myapp/storage.py — Boto3S3Storage + get_provider()
+# (full class in uploadkit-django README)
+def get_provider():
+    from django.conf import settings
+    return Boto3S3Storage(
+        access_key=settings.AWS_ACCESS_KEY_ID,
+        secret_key=settings.AWS_SECRET_ACCESS_KEY,
+        region=getattr(settings, "AWS_S3_REGION_NAME", "us-east-1"),
+        endpoint_url=getattr(settings, "AWS_S3_ENDPOINT_URL", None),
+    )</code></pre>
+            </div>
+          </figure>
+          </div>
+        </div>
+
+        <p class="section-note">
+          Full <code>Boto3S3Storage</code> class:
+          <a href="https://github.com/uploadkit/uploadkit-django" target="_blank" rel="noopener">uploadkit-django README</a>
+        </p>
+
+      </article>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <span>Built for Python developers</span>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/uploadkit" target="_blank" rel="noopener">github.com/uploadkit</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-clike.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="/pagefind/pagefind-ui.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>

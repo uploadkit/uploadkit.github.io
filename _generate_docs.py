@@ -722,6 +722,132 @@ PATTERNS = f"""
         <p>Use <code>default_validators()</code> / <code>default_async_validators()</code> from <code>uploadkit-security</code>. For MIME detection with libmagic, see the <a href="/docs/security/">Security</a> page.</p>
 """
 
+SECURITY_DEFAULTS_SYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import default_validators
+
+policy = UploadPolicy(
+    max_size=5 * 1024 * 1024,
+    allowed_extensions=frozenset({"png", "jpg"}),
+    allowed_mime_types=frozenset({"image/png", "image/jpeg"}),
+    validators=default_validators(),
+)"""
+
+SECURITY_DEFAULTS_ASYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import default_async_validators
+
+policy = UploadPolicy(
+    max_size=5 * 1024 * 1024,
+    allowed_extensions=frozenset({"png", "jpg"}),
+    allowed_mime_types=frozenset({"image/png", "image/jpeg"}),
+    async_validators=default_async_validators(),
+)"""
+
+SECURITY_CUSTOMIZE_SYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import (
+    ChecksumValidator,
+    FileNameValidator,
+    FileSizeValidator,
+    default_validators,
+)
+
+# Drop checksum from the full stack
+validators = default_validators(exclude=ChecksumValidator)
+
+# Keep only size + filename
+validators = default_validators(
+    include=(FileSizeValidator, FileNameValidator),
+)
+
+policy = UploadPolicy(
+    max_size=5 * 1024 * 1024,
+    validators=validators,
+)"""
+
+SECURITY_CUSTOMIZE_ASYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import (
+    AsyncChecksumValidator,
+    AsyncFileNameValidator,
+    AsyncFileSizeValidator,
+    default_async_validators,
+)
+
+# Drop checksum from the full stack
+async_validators = default_async_validators(exclude=AsyncChecksumValidator)
+
+# Keep only size + filename
+async_validators = default_async_validators(
+    include=(AsyncFileSizeValidator, AsyncFileNameValidator),
+)
+
+policy = UploadPolicy(
+    max_size=5 * 1024 * 1024,
+    async_validators=async_validators,
+)"""
+
+SECURITY_MIME_SYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import detect_mime_type, default_validators
+
+# Requires: pip install 'uploadkit-security[magic]' + OS libmagic
+head = open("photo.png", "rb").read(2048)
+print(detect_mime_type(head, "photo.png"))  # e.g. "image/png"
+
+policy = UploadPolicy(
+    max_size=5 * 1024 * 1024,
+    allowed_extensions=frozenset({"png", "pdf"}),
+    allowed_mime_types=frozenset({"image/png", "application/pdf"}),
+    validators=default_validators(),  # MimeTypeValidator uses detect_mime_type
+)"""
+
+SECURITY_MIME_ASYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import detect_mime_type, default_async_validators
+
+# Requires: pip install 'uploadkit-security[magic]' + OS libmagic
+head = open("photo.png", "rb").read(2048)
+print(detect_mime_type(head, "photo.png"))  # e.g. "image/png"
+
+policy = UploadPolicy(
+    max_size=5 * 1024 * 1024,
+    allowed_extensions=frozenset({"png", "pdf"}),
+    allowed_mime_types=frozenset({"image/png", "application/pdf"}),
+    async_validators=default_async_validators(),  # AsyncMimeTypeValidator
+)"""
+
+SECURITY_FILENAME_CHECKSUM_SYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import (
+    ChecksumValidator,
+    FileNameValidator,
+    default_validators,
+    sanitize_filename,
+)
+
+print(sanitize_filename("../../evil name!!.txt"))  # "evil name__.txt"
+
+# Filename hardening only
+validators = default_validators(include=(FileNameValidator,))
+
+# Checksum only — result.sha256 after upload
+validators = default_validators(include=(ChecksumValidator,))
+
+policy = UploadPolicy(validators=validators)"""
+
+SECURITY_FILENAME_CHECKSUM_ASYNC = """from uploadkit import UploadPolicy
+from uploadkit_security import (
+    AsyncChecksumValidator,
+    AsyncFileNameValidator,
+    default_async_validators,
+    sanitize_filename,
+)
+
+print(sanitize_filename("../../evil name!!.txt"))  # "evil name__.txt"
+
+# Filename hardening only
+async_validators = default_async_validators(include=(AsyncFileNameValidator,))
+
+# Checksum only — result.sha256 after upload
+async_validators = default_async_validators(include=(AsyncChecksumValidator,))
+
+policy = UploadPolicy(async_validators=async_validators)"""
+
 SECURITY = f"""
         <h1>Security</h1>
         <p class="section-lead"><code>uploadkit-security</code> provides size, extension, MIME, filename, and checksum validators (sync + async). Pair it with Core or any framework adapter.</p>
@@ -782,6 +908,76 @@ SECURITY = f"""
           </div>
         </div>
         <p class="section-note">Optional: prefer <code>uv add 'uploadkit-security[magic]'</code> or <code>poetry add uploadkit-security -E magic</code>.</p>
+
+        <h2>Examples</h2>
+        <p class="section-lead">Attach validators on <code>UploadPolicy</code>. Sync pipelines use <code>validators</code>; async pipelines use <code>async_validators</code>.</p>
+
+        <h3>Default stack</h3>
+        <p>Size → extension → MIME → filename → checksum. Policy allow-lists are read by the validators.</p>
+        <div class="tabs nested-tabs" data-tabs="security-defaults">
+          <div class="tab-bar" role="tablist" aria-label="Default stack examples">
+            <button type="button" class="tab-btn active" data-tab="tab-security-defaults-sync" role="tab" aria-selected="true">Sync</button>
+            <button type="button" class="tab-btn" data-tab="tab-security-defaults-async" role="tab" aria-selected="false">Async</button>
+          </div>
+          <div id="tab-security-defaults-sync" class="tab-panel active" role="tabpanel">
+{code_block("policy_sync.py", "python", SECURITY_DEFAULTS_SYNC)}
+          </div>
+          <div id="tab-security-defaults-async" class="tab-panel" role="tabpanel">
+{code_block("policy_async.py", "python", SECURITY_DEFAULTS_ASYNC)}
+          </div>
+        </div>
+
+        <h3>Customize the stack</h3>
+        <p>Use <code>include</code>, <code>exclude</code>, and <code>extra</code> on <code>default_validators()</code> / <code>default_async_validators()</code>.</p>
+        <div class="tabs nested-tabs" data-tabs="security-customize">
+          <div class="tab-bar" role="tablist" aria-label="Customize stack examples">
+            <button type="button" class="tab-btn active" data-tab="tab-security-customize-sync" role="tab" aria-selected="true">Sync</button>
+            <button type="button" class="tab-btn" data-tab="tab-security-customize-async" role="tab" aria-selected="false">Async</button>
+          </div>
+          <div id="tab-security-customize-sync" class="tab-panel active" role="tabpanel">
+{code_block("customize_sync.py", "python", SECURITY_CUSTOMIZE_SYNC)}
+          </div>
+          <div id="tab-security-customize-async" class="tab-panel" role="tabpanel">
+{code_block("customize_async.py", "python", SECURITY_CUSTOMIZE_ASYNC)}
+          </div>
+        </div>
+
+        <h3>MIME detection</h3>
+        <p><code>MimeTypeValidator</code> / <code>AsyncMimeTypeValidator</code> call <code>detect_mime_type</code>. With <code>uploadkit-security[magic]</code> and OS libmagic installed, sniffing uses <code>python-magic</code>; otherwise a built-in signature table covers common types.</p>
+        <div class="tabs nested-tabs" data-tabs="security-mime">
+          <div class="tab-bar" role="tablist" aria-label="MIME detection examples">
+            <button type="button" class="tab-btn active" data-tab="tab-security-mime-sync" role="tab" aria-selected="true">Sync</button>
+            <button type="button" class="tab-btn" data-tab="tab-security-mime-async" role="tab" aria-selected="false">Async</button>
+          </div>
+          <div id="tab-security-mime-sync" class="tab-panel active" role="tabpanel">
+{code_block("mime_sync.py", "python", SECURITY_MIME_SYNC)}
+          </div>
+          <div id="tab-security-mime-async" class="tab-panel" role="tabpanel">
+{code_block("mime_async.py", "python", SECURITY_MIME_ASYNC)}
+          </div>
+        </div>
+
+        <h3>Filename and checksum</h3>
+        <p>Harden names with <code>FileNameValidator</code> / <code>sanitize_filename</code>. Compute SHA-256 with <code>ChecksumValidator</code> so <code>result.sha256</code> is set after upload.</p>
+        <div class="tabs nested-tabs" data-tabs="security-filename-checksum">
+          <div class="tab-bar" role="tablist" aria-label="Filename and checksum examples">
+            <button type="button" class="tab-btn active" data-tab="tab-security-filename-sync" role="tab" aria-selected="true">Sync</button>
+            <button type="button" class="tab-btn" data-tab="tab-security-filename-async" role="tab" aria-selected="false">Async</button>
+          </div>
+          <div id="tab-security-filename-sync" class="tab-panel active" role="tabpanel">
+{code_block("filename_checksum_sync.py", "python", SECURITY_FILENAME_CHECKSUM_SYNC)}
+          </div>
+          <div id="tab-security-filename-async" class="tab-panel" role="tabpanel">
+{code_block("filename_checksum_async.py", "python", SECURITY_FILENAME_CHECKSUM_ASYNC)}
+          </div>
+        </div>
+
+        <p class="section-note">
+          Shared policy and error conventions:
+          <a href="/docs/patterns/">Common patterns</a>.
+          Full reference:
+          <a href="https://github.com/uploadkit/uploadkit-security" target="_blank" rel="noopener">uploadkit-security README</a>.
+        </p>
 """
 
 def main() -> None:

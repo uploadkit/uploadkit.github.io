@@ -585,6 +585,11 @@ h1 .line.accent {
   color: #2c5bb4;
 }
 
+.tab-icon--odoo {
+  --tab-icon: url("/icons/odoo.svg");
+  color: #a24689;
+}
+
 .tab-icon--flask {
   --tab-icon: url("/icons/flask.svg");
   color: #e2e8f0;

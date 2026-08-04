@@ -6,9 +6,10 @@ Public documentation site for [UploadKit](https://uploadkit.github.io/) — modu
 
 - `/` — marketing landing
 - `/docs/` — getting started and guides (sidebar + Pagefind search)
-- `/docs/core/`, `/docs/django/`, `/docs/fastapi/`, `/docs/aiohttp/`, `/docs/flask/`
+- `/docs/core/`, `/docs/django/`, `/docs/fastapi/`, `/docs/aiohttp/`, `/docs/odoo/`, `/docs/flask/`
 - `/docs/patterns/` — shared policy, validators, errors, JSON shape
 - `/docs/security/` — `uploadkit-security` + libmagic
+- `/docs/storage/` — boto3 / aioboto3 for AWS S3 and MinIO
 
 Hand-authored static HTML/CSS/JS. Nested tabs (pip/uv/poetry, sync/async) stay as tabs; framework guides are real URLs.
 
@@ -59,6 +60,13 @@ In the repo **Settings → Pages**, set source to **GitHub Actions** (not “Dep
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/uploadkit/uploadkit-fastapi/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://github.com/uploadkit/uploadkit-fastapi/blob/main/pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/fastapi-0.110%2B-teal)](https://github.com/uploadkit/uploadkit-fastapi/blob/main/pyproject.toml)
+
+### uploadkit-odoo
+
+[![CI](https://github.com/uploadkit/uploadkit-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/uploadkit/uploadkit-odoo/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/uploadkit/uploadkit-odoo/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/uploadkit/uploadkit-odoo/blob/main/pyproject.toml)
+[![Odoo](https://img.shields.io/badge/odoo-17%20%7C%2018-purple)](https://github.com/uploadkit/uploadkit-odoo)
 
 ## Links
 

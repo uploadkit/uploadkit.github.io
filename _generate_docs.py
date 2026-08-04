@@ -75,6 +75,7 @@ HEAD = """<!DOCTYPE html>
           <li><a href="/docs/django/"{active_django}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--django" aria-hidden="true"></span>Django</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/fastapi/"{active_fastapi}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--fastapi" aria-hidden="true"></span>FastAPI</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/aiohttp/"{active_aiohttp}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--aiohttp" aria-hidden="true"></span>aiohttp</span> <span class="badge badge-live">Supported</span></a></li>
+          <li><a href="/docs/odoo/"{active_odoo}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--odoo" aria-hidden="true"></span>Odoo</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/flask/"{active_flask}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-soon">Soon</span></a></li>
         </ul>
       </div>
@@ -112,6 +113,7 @@ ACTIVE_KEYS = (
     "django",
     "fastapi",
     "aiohttp",
+    "odoo",
     "flask",
 )
 
@@ -193,7 +195,7 @@ GETTING = f"""
           <li><a href="/docs/core/">Core reference</a> — sync <code>Uploader</code> and async <code>AsyncUploader</code></li>
           <li><a href="/docs/storage/">Storage</a> — boto3 / aioboto3 for AWS S3 and MinIO</li>
           <li><a href="/docs/patterns/">Common patterns</a> — policy, validators, errors, JSON shape</li>
-          <li><a href="/docs/django/">Django</a>, <a href="/docs/fastapi/">FastAPI</a>, or <a href="/docs/aiohttp/">aiohttp</a> — adapter glue</li>
+          <li><a href="/docs/django/">Django</a>, <a href="/docs/fastapi/">FastAPI</a>, <a href="/docs/aiohttp/">aiohttp</a>, or <a href="/docs/odoo/">Odoo</a> — adapter glue</li>
           <li><a href="/docs/security/">Security</a> — <code>uploadkit-security</code> and libmagic</li>
         </ul>
 """
@@ -665,6 +667,135 @@ AIOHTTP = f"""
         </p>
 """
 
+ODOO_CONTROLLER = """from odoo import http
+from odoo.http import request
+from uploadkit import Uploader, UploadPolicy, UploaderError
+from uploadkit_odoo import as_uploadable, json_error_response
+from uploadkit_security import default_validators
+
+
+class MyController(http.Controller):
+    @http.route("/my/upload", type="http", auth="user", methods=["POST"], csrf=True)
+    def upload(self, **kw):
+        storage = get_provider()  # your StorageProvider factory
+        policy = UploadPolicy(
+            max_size=5 * 1024 * 1024,
+            allowed_extensions=frozenset({"png"}),
+            allowed_mime_types=frozenset({"image/png"}),
+            validators=default_validators(),
+        )
+        uploaded = kw.get("file")
+        try:
+            result = Uploader(policy, storage).upload(
+                as_uploadable(uploaded),
+                bucket="uploads",
+                object_name=uploaded.filename,
+            )
+        except UploaderError as exc:
+            return json_error_response(exc)
+        return request.make_json_response(result.as_task_kwargs())"""
+
+ODOO_STORAGE = """# my_module/storage.py
+import boto3
+from botocore.client import Config
+from odoo.tools import config
+
+
+class Boto3S3Storage:
+    def __init__(
+        self,
+        *,
+        access_key: str,
+        secret_key: str,
+        region: str = "us-east-1",
+        endpoint_url: str | None = None,
+    ) -> None:
+        kwargs: dict = {
+            "service_name": "s3",
+            "aws_access_key_id": access_key,
+            "aws_secret_access_key": secret_key,
+            "region_name": region,
+            "config": Config(signature_version="s3v4"),
+        }
+        if endpoint_url:
+            kwargs["endpoint_url"] = endpoint_url
+        self.client = boto3.client(**kwargs)
+
+    def put(self, *, bucket, object_name, body, content_type):
+        resp = self.client.put_object(
+            Bucket=bucket,
+            Key=object_name,
+            Body=body,
+            ContentType=content_type,
+        )
+        return resp.get("ETag")
+
+
+def get_provider():
+    \"\"\"Factory used by uploadkit.storage_provider config parameter.\"\"\"
+    return Boto3S3Storage(
+        access_key=config.get("uploadkit_access_key", ""),
+        secret_key=config.get("uploadkit_secret_key", ""),
+        region=config.get("uploadkit_region", "us-east-1"),
+        endpoint_url=config.get("uploadkit_endpoint_url") or None,
+    )"""
+
+ODOO_SERVICE = """# After installing the UploadKit Odoo addon:
+result = env["uploadkit.service"].upload(
+    file_storage,
+    object_name="docs/a.pdf",
+)
+# result is UploadResult.as_task_kwargs()
+
+# Or POST multipart to /uploadkit/upload (auth=user, CSRF)
+# field: file  |  optional: object_name"""
+
+ODOO = f"""
+        <h1>Odoo</h1>
+        <p class="section-lead">Thin integration over Core. Adapts Werkzeug <code>FileStorage</code> from Odoo controllers and maps errors to JSON. Optional Odoo 17/18 addon wires settings, a service model, and an HTTP route. Python 3.10–3.12.</p>
+
+        <h2>Install</h2>
+{install_tabs(
+    "odoo",
+    "pip install uploadkit-odoo uploadkit-security",
+    "uv add uploadkit-odoo uploadkit-security",
+    "poetry add uploadkit-odoo uploadkit-security",
+)}
+
+        <h2>Adapter glue</h2>
+        <p class="section-note">Policy setup, validators, <code>UploaderError</code>, and the JSON response shape are shared — see <a href="/docs/patterns/">Common patterns</a>. Supply your own <code>StorageProvider</code>; creating <code>ir.attachment</code> records after upload is left to your module.</p>
+
+        <div class="tabs nested-tabs" data-tabs="odoo-inner">
+          <div class="tab-bar" role="tablist" aria-label="Odoo examples">
+            <button type="button" class="tab-btn active" data-tab="tab-odoo-controller" role="tab" aria-selected="true">Controller</button>
+            <button type="button" class="tab-btn" data-tab="tab-odoo-storage" role="tab" aria-selected="false">Storage</button>
+            <button type="button" class="tab-btn" data-tab="tab-odoo-addon" role="tab" aria-selected="false">Addon</button>
+          </div>
+
+          <div id="tab-odoo-controller" class="tab-panel active" role="tabpanel">
+            <p class="section-note">Uses <code>as_uploadable()</code> on Werkzeug <code>FileStorage</code> and <code>json_error_response()</code>.</p>
+{code_block("controllers.py", "python", ODOO_CONTROLLER)}
+          </div>
+
+          <div id="tab-odoo-storage" class="tab-panel" role="tabpanel">
+            <p class="section-note">AWS: leave <code>endpoint_url</code> unset. MinIO: set it to your endpoint. Full class also in <a href="/docs/storage/">Storage</a>.</p>
+{code_block("storage.py", "python", ODOO_STORAGE)}
+          </div>
+
+          <div id="tab-odoo-addon" class="tab-panel" role="tabpanel">
+            <p class="section-note">Add this repo’s <code>addons/</code> to Odoo <code>addons_path</code>, install <strong>UploadKit</strong> in Apps, then configure under <strong>Settings → UploadKit</strong> (storage factory, bucket, optional prefix / max size).</p>
+{code_block("service.py", "python", ODOO_SERVICE)}
+          </div>
+        </div>
+
+        <p class="section-note">
+          Full <code>Boto3S3Storage</code> class:
+          <a href="/docs/storage/">Storage</a>
+          ·
+          <a href="https://github.com/uploadkit/uploadkit-odoo" target="_blank" rel="noopener">uploadkit-odoo README</a>
+        </p>
+"""
+
 FLASK = """
         <h1>Flask</h1>
         <p class="section-lead">Flask-specific adapters only. Same ecosystem boundaries as Django and FastAPI.</p>
@@ -693,8 +824,8 @@ async_policy = UploadPolicy(
 
 PATTERNS_ERROR = """from uploadkit import UploaderError
 
-# Django / FastAPI helpers
-from uploadkit_django import json_error_response  # or uploadkit_fastapi
+# Django / FastAPI / Odoo helpers
+from uploadkit_django import json_error_response  # or uploadkit_fastapi / uploadkit_odoo
 try:
     result = Uploader(policy, storage).upload(...)
 except UploaderError as exc:
@@ -722,7 +853,7 @@ PATTERNS = f"""
 {code_block("policy.py", "python", PATTERNS_POLICY)}
 
         <h2>Error handling</h2>
-        <p>Catch <code>UploaderError</code>. Django and FastAPI ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
+        <p>Catch <code>UploaderError</code>. Django, FastAPI, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
 {code_block("errors.py", "python", PATTERNS_ERROR)}
 
         <h2>Success JSON shape</h2>
@@ -956,7 +1087,7 @@ STORAGE = f"""
 
         <h2>AWS S3 vs MinIO</h2>
         <p>Same class for both. Leave <code>endpoint_url</code> unset for AWS S3. For MinIO, set it to your API URL (local default <code>http://127.0.0.1:9000</code> with <code>minioadmin</code> / <code>minioadmin</code>).</p>
-        <p class="section-note">Django settings use the same toggle via <code>AWS_S3_ENDPOINT_URL</code> — see the <a href="/docs/django/">Django</a> guide.</p>
+        <p class="section-note">Django settings use the same toggle via <code>AWS_S3_ENDPOINT_URL</code> — see the <a href="/docs/django/">Django</a> guide. Odoo uses <code>odoo.tools.config</code> keys — see the <a href="/docs/odoo/">Odoo</a> guide.</p>
 
         <h2>Frameworks</h2>
         <p>Adapter glue only — storage classes stay in your app:</p>
@@ -964,6 +1095,7 @@ STORAGE = f"""
           <li><a href="/docs/django/">Django</a> — <code>UPLOADKIT_STORAGE_PROVIDER</code> factory + <code>get_storage_provider()</code></li>
           <li><a href="/docs/fastapi/">FastAPI</a> — async streaming or sync via <code>run_sync_upload</code></li>
           <li><a href="/docs/aiohttp/">aiohttp</a> — store the provider on <code>app["async_storage"]</code></li>
+          <li><a href="/docs/odoo/">Odoo</a> — dotted-path factory + optional addon settings</li>
         </ul>
 
         <h2>Testing</h2>
@@ -1242,6 +1374,7 @@ def main() -> None:
         ("docs/django/index.html", "Django — UploadKit", "Django adapters and response helpers for UploadKit.", "/docs/django/", "django", DJANGO),
         ("docs/fastapi/index.html", "FastAPI — UploadKit", "FastAPI adapters, BackgroundTasks, and async/sync helpers.", "/docs/fastapi/", "fastapi", FASTAPI),
         ("docs/aiohttp/index.html", "aiohttp — UploadKit", "Use UploadKit Core directly with aiohttp multipart.", "/docs/aiohttp/", "aiohttp", AIOHTTP),
+        ("docs/odoo/index.html", "Odoo — UploadKit", "Odoo adapters, Werkzeug FileStorage glue, and optional Odoo 17/18 addon.", "/docs/odoo/", "odoo", ODOO),
         ("docs/flask/index.html", "Flask — UploadKit", "Flask adapters coming soon.", "/docs/flask/", "flask", FLASK),
         ("docs/patterns/index.html", "Common patterns — UploadKit", "Shared UploadPolicy, validators, errors, and JSON response shape.", "/docs/patterns/", "patterns", PATTERNS),
         ("docs/storage/index.html", "Storage — UploadKit", "BYO S3-compatible storage with boto3 and aioboto3 for AWS S3 and MinIO.", "/docs/storage/", "storage", STORAGE),

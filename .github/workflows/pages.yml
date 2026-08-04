@@ -29,10 +29,24 @@ jobs:
       - name: Build search index
         run: npx pagefind --site . --output-subdir pagefind --glob "{index.html,docs/**/*.html}"
 
+      - name: Stage site for deploy
+        run: |
+          mkdir -p _site
+          # Copy published site assets only (exclude git metadata and workflow sources)
+          shopt -s dotglob nullglob
+          for item in *; do
+            case "$item" in
+              .git|.github|_site|node_modules) continue ;;
+            esac
+            cp -a "$item" _site/
+          done
+          # Keep .nojekyll for Pages
+          touch _site/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
   deploy:
     needs: build

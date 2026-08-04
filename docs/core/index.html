@@ -59,6 +59,7 @@
         <ul class="docs-nav">
           <li><a href="/docs/core/" class="active" aria-current="page"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/">Common patterns</a></li>
+          <li><a href="/docs/storage/">Storage</a></li>
           <li><a href="/docs/security/">Security</a></li>
         </ul>
       </div>
@@ -133,7 +134,7 @@
           </div>
 
           <div id="tab-core-sync" class="tab-panel active" role="tabpanel">
-            <p class="section-note"><code>Boto3S3Storage</code> works for <strong>AWS S3</strong> (omit <code>endpoint_url</code>) and <strong>MinIO</strong> (set <code>endpoint_url</code>). Requires <code>pip install boto3</code>.</p>
+            <p class="section-note"><code>Boto3S3Storage</code> works for <strong>AWS S3</strong> and <strong>MinIO</strong>. Full classes and install notes: <a href="/docs/storage/">Storage</a>.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>storage_sync.py</code>
@@ -189,7 +190,7 @@ result = Uploader(policy, storage).upload(
           </div>
 
           <div id="tab-core-async" class="tab-panel" role="tabpanel">
-            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class is in the <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>.</p>
+            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class: <a href="/docs/storage/">Storage</a>.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>example_async.py</code>
@@ -198,7 +199,7 @@ result = Uploader(policy, storage).upload(
             <div class="code-block-body">
               <pre><code class="language-python">from uploadkit import AsyncUploader, UploadPolicy
 from uploadkit_security import default_async_validators
-# from myapp.s3_async import AsyncS3Storage  # copy from Core README
+# from myapp.s3_async import AsyncS3Storage  # see /docs/storage/
 
 # AWS S3
 async_storage = AsyncS3Storage(
@@ -228,6 +229,9 @@ result = await AsyncUploader(policy, async_storage).upload(
         </div>
 
         <p class="section-note">
+          Storage providers:
+          <a href="/docs/storage/">Storage</a>
+          ·
           Docs:
           <a href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">uploadkit</a>
           ·

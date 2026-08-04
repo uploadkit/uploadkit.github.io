@@ -65,6 +65,7 @@ HEAD = """<!DOCTYPE html>
         <ul class="docs-nav">
           <li><a href="/docs/core/"{active_core}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/"{active_patterns}>Common patterns</a></li>
+          <li><a href="/docs/storage/"{active_storage}>Storage</a></li>
           <li><a href="/docs/security/"{active_security}>Security</a></li>
         </ul>
       </div>
@@ -106,6 +107,7 @@ ACTIVE_KEYS = (
     "getting",
     "core",
     "patterns",
+    "storage",
     "security",
     "django",
     "fastapi",
@@ -189,6 +191,7 @@ GETTING = f"""
         <h2>Next steps</h2>
         <ul>
           <li><a href="/docs/core/">Core reference</a> — sync <code>Uploader</code> and async <code>AsyncUploader</code></li>
+          <li><a href="/docs/storage/">Storage</a> — boto3 / aioboto3 for AWS S3 and MinIO</li>
           <li><a href="/docs/patterns/">Common patterns</a> — policy, validators, errors, JSON shape</li>
           <li><a href="/docs/django/">Django</a>, <a href="/docs/fastapi/">FastAPI</a>, or <a href="/docs/aiohttp/">aiohttp</a> — adapter glue</li>
           <li><a href="/docs/security/">Security</a> — <code>uploadkit-security</code> and libmagic</li>
@@ -242,7 +245,7 @@ result = Uploader(policy, storage).upload(
 
 CORE_ASYNC = """from uploadkit import AsyncUploader, UploadPolicy
 from uploadkit_security import default_async_validators
-# from myapp.s3_async import AsyncS3Storage  # copy from Core README
+# from myapp.s3_async import AsyncS3Storage  # see /docs/storage/
 
 # AWS S3
 async_storage = AsyncS3Storage(
@@ -289,17 +292,20 @@ CORE = f"""
           </div>
 
           <div id="tab-core-sync" class="tab-panel active" role="tabpanel">
-            <p class="section-note"><code>Boto3S3Storage</code> works for <strong>AWS S3</strong> (omit <code>endpoint_url</code>) and <strong>MinIO</strong> (set <code>endpoint_url</code>). Requires <code>pip install boto3</code>.</p>
+            <p class="section-note"><code>Boto3S3Storage</code> works for <strong>AWS S3</strong> and <strong>MinIO</strong>. Full classes and install notes: <a href="/docs/storage/">Storage</a>.</p>
 {code_block("storage_sync.py", "python", CORE_SYNC)}
           </div>
 
           <div id="tab-core-async" class="tab-panel" role="tabpanel">
-            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class is in the <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>.</p>
+            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class: <a href="/docs/storage/">Storage</a>.</p>
 {code_block("example_async.py", "python", CORE_ASYNC)}
           </div>
         </div>
 
         <p class="section-note">
+          Storage providers:
+          <a href="/docs/storage/">Storage</a>
+          ·
           Docs:
           <a href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">uploadkit</a>
           ·
@@ -349,7 +355,7 @@ UPLOADKIT_BUCKET = "my-prod-bucket"
 # AWS_SECRET_ACCESS_KEY = "minioadmin"
 
 # myapp/storage.py — Boto3S3Storage + get_provider()
-# (full class in uploadkit-django README)
+# (full class in /docs/storage/)
 def get_provider():
     from django.conf import settings
     return Boto3S3Storage(
@@ -393,6 +399,8 @@ DJANGO = f"""
 
         <p class="section-note">
           Full <code>Boto3S3Storage</code> class:
+          <a href="/docs/storage/">Storage</a>
+          ·
           <a href="https://github.com/uploadkit/uploadkit-django" target="_blank" rel="noopener">uploadkit-django README</a>
         </p>
 """
@@ -503,12 +511,12 @@ FASTAPI = f"""
           </div>
 
           <div id="tab-fastapi-async" class="tab-panel active" role="tabpanel">
-            <p class="section-note">Copy <code>AsyncS3Storage</code> from the <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>. Requires <code>pip install aioboto3</code>. Uses <code>as_async_source()</code> and <code>background_after_upload()</code>.</p>
+            <p class="section-note">Copy <code>AsyncS3Storage</code> from <a href="/docs/storage/">Storage</a>. Requires <code>pip install aioboto3</code>. Uses <code>as_async_source()</code> and <code>background_after_upload()</code>.</p>
 {code_block("main.py", "python", FASTAPI_ASYNC)}
           </div>
 
           <div id="tab-fastapi-sync" class="tab-panel" role="tabpanel">
-            <p class="section-note"><code>Boto3S3Storage</code> + <code>run_sync_upload</code>. Requires <code>pip install boto3</code>.</p>
+            <p class="section-note"><code>Boto3S3Storage</code> + <code>run_sync_upload</code>. Requires <code>pip install boto3</code>. Full class: <a href="/docs/storage/">Storage</a>.</p>
 {code_block("main.py", "python", FASTAPI_SYNC)}
           </div>
         </div>
@@ -516,9 +524,9 @@ FASTAPI = f"""
         <p class="section-note">
           After-upload: <code>BackgroundTasks</code>, Celery-like <code>.delay</code>, or a plain callback.
           Full storage classes:
-          <a href="https://github.com/uploadkit/uploadkit-fastapi" target="_blank" rel="noopener">uploadkit-fastapi</a>
+          <a href="/docs/storage/">Storage</a>
           ·
-          <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>
+          <a href="https://github.com/uploadkit/uploadkit-fastapi" target="_blank" rel="noopener">uploadkit-fastapi</a>
         </p>
 """
 
@@ -588,7 +596,7 @@ async def upload_handler(request: web.Request) -> web.Response:
 
 AIOHTTP_APP = """from aiohttp import web
 from handlers import upload_handler
-# from myapp.s3_async import AsyncS3Storage  # copy from Core README
+# from myapp.s3_async import AsyncS3Storage  # see /docs/storage/
 
 async def notify(result) -> None:
     ...
@@ -642,13 +650,16 @@ AIOHTTP = f"""
           </div>
 
           <div id="tab-aiohttp-app" class="tab-panel" role="tabpanel">
-            <p class="section-note">Use <code>AsyncS3Storage</code> from the <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a> for AWS S3 or MinIO.</p>
+            <p class="section-note">Use <code>AsyncS3Storage</code> from <a href="/docs/storage/">Storage</a> for AWS S3 or MinIO.</p>
 {code_block("app.py", "python", AIOHTTP_APP)}
           </div>
         </div>
 
         <p class="section-note">
           Same Core async stack as FastAPI — only the <code>AsyncByteSource</code> adapter differs.
+          Storage:
+          <a href="/docs/storage/">Storage</a>
+          ·
           Docs:
           <a href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">uploadkit</a>
         </p>
@@ -720,6 +731,250 @@ PATTERNS = f"""
 
         <h2>Validators</h2>
         <p>Use <code>default_validators()</code> / <code>default_async_validators()</code> from <code>uploadkit-security</code>. For MIME detection with libmagic, see the <a href="/docs/security/">Security</a> page.</p>
+"""
+
+STORAGE_SYNC = """import boto3
+from botocore.client import Config
+
+
+class Boto3S3Storage:
+    \"\"\"S3-compatible sync storage for AWS S3 or MinIO.\"\"\"
+
+    def __init__(
+        self,
+        *,
+        access_key: str,
+        secret_key: str,
+        region: str = "us-east-1",
+        endpoint_url: str | None = None,
+    ) -> None:
+        kwargs: dict = {
+            "service_name": "s3",
+            "aws_access_key_id": access_key,
+            "aws_secret_access_key": secret_key,
+            "region_name": region,
+            "config": Config(signature_version="s3v4"),
+        }
+        if endpoint_url:
+            kwargs["endpoint_url"] = endpoint_url
+        self.client = boto3.client(**kwargs)
+
+    def put(self, *, bucket, object_name, body, content_type):
+        resp = self.client.put_object(
+            Bucket=bucket,
+            Key=object_name,
+            Body=body,
+            ContentType=content_type,
+        )
+        return resp.get("ETag")
+
+
+# AWS S3
+storage = Boto3S3Storage(
+    access_key="AKIA...",
+    secret_key="...",
+    region="eu-west-1",
+)
+
+# MinIO (local default)
+storage = Boto3S3Storage(
+    endpoint_url="http://127.0.0.1:9000",
+    access_key="minioadmin",
+    secret_key="minioadmin",
+    region="us-east-1",
+)"""
+
+STORAGE_ASYNC = """from __future__ import annotations
+
+import aioboto3
+from botocore.client import Config
+
+_PART_SIZE = 5 * 1024 * 1024  # 5 MiB
+
+
+class AsyncS3Writer:
+    def __init__(self, client, *, bucket: str, object_name: str, content_type: str) -> None:
+        self._client = client
+        self._bucket = bucket
+        self._key = object_name
+        self._content_type = content_type
+        self._upload_id: str | None = None
+        self._parts: list[dict] = []
+        self._buffer = bytearray()
+        self._part_number = 1
+
+    async def _ensure_upload(self) -> None:
+        if self._upload_id is not None:
+            return
+        resp = await self._client.create_multipart_upload(
+            Bucket=self._bucket,
+            Key=self._key,
+            ContentType=self._content_type,
+        )
+        self._upload_id = resp["UploadId"]
+
+    async def _flush_part(self, data: bytes) -> None:
+        await self._ensure_upload()
+        assert self._upload_id is not None
+        resp = await self._client.upload_part(
+            Bucket=self._bucket,
+            Key=self._key,
+            PartNumber=self._part_number,
+            UploadId=self._upload_id,
+            Body=data,
+        )
+        self._parts.append({"ETag": resp["ETag"], "PartNumber": self._part_number})
+        self._part_number += 1
+
+    async def write(self, chunk: bytes) -> None:
+        self._buffer.extend(chunk)
+        while len(self._buffer) >= _PART_SIZE:
+            part = bytes(self._buffer[:_PART_SIZE])
+            del self._buffer[:_PART_SIZE]
+            await self._flush_part(part)
+
+    async def abort(self) -> None:
+        if self._upload_id is None:
+            return
+        await self._client.abort_multipart_upload(
+            Bucket=self._bucket,
+            Key=self._key,
+            UploadId=self._upload_id,
+        )
+        self._upload_id = None
+
+    async def complete(self) -> str | None:
+        if self._buffer:
+            await self._flush_part(bytes(self._buffer))
+            self._buffer.clear()
+        if self._upload_id is None:
+            # empty object
+            resp = await self._client.put_object(
+                Bucket=self._bucket,
+                Key=self._key,
+                Body=b"",
+                ContentType=self._content_type,
+            )
+            return resp.get("ETag")
+        resp = await self._client.complete_multipart_upload(
+            Bucket=self._bucket,
+            Key=self._key,
+            UploadId=self._upload_id,
+            MultipartUpload={"Parts": self._parts},
+        )
+        self._upload_id = None
+        return resp.get("ETag")
+
+
+class AsyncS3Storage:
+    \"\"\"S3-compatible async storage for AWS S3 or MinIO.\"\"\"
+
+    def __init__(
+        self,
+        *,
+        access_key: str,
+        secret_key: str,
+        region: str = "us-east-1",
+        endpoint_url: str | None = None,
+    ) -> None:
+        self._session = aioboto3.Session()
+        self._client_kwargs: dict = {
+            "service_name": "s3",
+            "aws_access_key_id": access_key,
+            "aws_secret_access_key": secret_key,
+            "region_name": region,
+            "config": Config(signature_version="s3v4"),
+        }
+        if endpoint_url:
+            self._client_kwargs["endpoint_url"] = endpoint_url
+        self._cm = None
+        self._client = None
+
+    async def _get_client(self):
+        if self._client is None:
+            self._cm = self._session.client(**self._client_kwargs)
+            self._client = await self._cm.__aenter__()
+        return self._client
+
+    async def open_write(self, *, bucket: str, object_name: str, content_type: str):
+        client = await self._get_client()
+        return AsyncS3Writer(
+            client,
+            bucket=bucket,
+            object_name=object_name,
+            content_type=content_type,
+        )
+
+
+# AWS S3
+async_storage = AsyncS3Storage(
+    access_key="AKIA...",
+    secret_key="...",
+    region="eu-west-1",
+)
+
+# MinIO
+async_storage = AsyncS3Storage(
+    endpoint_url="http://127.0.0.1:9000",
+    access_key="minioadmin",
+    secret_key="minioadmin",
+)"""
+
+STORAGE = f"""
+        <h1>Storage</h1>
+        <p class="section-lead">UploadKit does <strong>not</strong> ship storage clients. You implement <code>StorageProvider</code> (sync) or <code>AsyncStorageProvider</code> (async) once — the same classes work for <strong>AWS S3</strong> (omit <code>endpoint_url</code>) and <strong>MinIO</strong> (set <code>endpoint_url</code>) via <code>boto3</code> / <code>aioboto3</code>.</p>
+
+        <h2>Install</h2>
+        <p class="section-note">These are app dependencies, not UploadKit package deps.</p>
+{install_tabs(
+    "storage",
+    "pip install boto3          # sync AWS S3 / MinIO\npip install aioboto3       # async AWS S3 / MinIO",
+    "uv add boto3        # sync\nuv add aioboto3     # async",
+    "poetry add boto3    # sync\npoetry add aioboto3 # async",
+)}
+
+        <h2>Protocols</h2>
+        <p>Sync pipelines call <code>StorageProvider.put(*, bucket, object_name, body, content_type)</code> and expect an etag (or <code>None</code>).</p>
+        <p>Async pipelines call <code>AsyncStorageProvider.open_write(...)</code>, then stream through <code>AsyncObjectWriter</code>: <code>write</code> → <code>complete</code> (or <code>abort</code> on failure).</p>
+
+        <h2>Examples</h2>
+        <p class="section-lead">Copy these classes into your app. Wire them into <code>Uploader</code> / <code>AsyncUploader</code> as shown on the <a href="/docs/core/">Core</a> page.</p>
+        <div class="tabs nested-tabs" data-tabs="storage-examples">
+          <div class="tab-bar" role="tablist" aria-label="Storage examples">
+            <button type="button" class="tab-btn active" data-tab="tab-storage-sync" role="tab" aria-selected="true">Sync (boto3)</button>
+            <button type="button" class="tab-btn" data-tab="tab-storage-async" role="tab" aria-selected="false">Async (aioboto3)</button>
+          </div>
+          <div id="tab-storage-sync" class="tab-panel active" role="tabpanel">
+            <p class="section-note"><code>Boto3S3Storage</code> implements <code>StorageProvider</code>. Requires <code>pip install boto3</code>.</p>
+{code_block("s3_sync.py", "python", STORAGE_SYNC)}
+          </div>
+          <div id="tab-storage-async" class="tab-panel" role="tabpanel">
+            <p class="section-note">Multipart streaming writer (5 MiB part size — S3/MinIO rule except the last part). Requires <code>pip install aioboto3</code>.</p>
+{code_block("s3_async.py", "python", STORAGE_ASYNC)}
+          </div>
+        </div>
+
+        <h2>AWS S3 vs MinIO</h2>
+        <p>Same class for both. Leave <code>endpoint_url</code> unset for AWS S3. For MinIO, set it to your API URL (local default <code>http://127.0.0.1:9000</code> with <code>minioadmin</code> / <code>minioadmin</code>).</p>
+        <p class="section-note">Django settings use the same toggle via <code>AWS_S3_ENDPOINT_URL</code> — see the <a href="/docs/django/">Django</a> guide.</p>
+
+        <h2>Frameworks</h2>
+        <p>Adapter glue only — storage classes stay in your app:</p>
+        <ul>
+          <li><a href="/docs/django/">Django</a> — <code>UPLOADKIT_STORAGE_PROVIDER</code> factory + <code>get_storage_provider()</code></li>
+          <li><a href="/docs/fastapi/">FastAPI</a> — async streaming or sync via <code>run_sync_upload</code></li>
+          <li><a href="/docs/aiohttp/">aiohttp</a> — store the provider on <code>app["async_storage"]</code></li>
+        </ul>
+
+        <h2>Testing</h2>
+        <p>Use <code>FakeStorageProvider</code> from <code>uploadkit-testing</code> so tests never hit S3 or MinIO.</p>
+
+        <p class="section-note">
+          Shared policy and error conventions:
+          <a href="/docs/patterns/">Common patterns</a>.
+          GitHub copy of these samples:
+          <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>.
+        </p>
 """
 
 SECURITY_DEFAULTS_SYNC = """from uploadkit import UploadPolicy
@@ -989,6 +1244,7 @@ def main() -> None:
         ("docs/aiohttp/index.html", "aiohttp — UploadKit", "Use UploadKit Core directly with aiohttp multipart.", "/docs/aiohttp/", "aiohttp", AIOHTTP),
         ("docs/flask/index.html", "Flask — UploadKit", "Flask adapters coming soon.", "/docs/flask/", "flask", FLASK),
         ("docs/patterns/index.html", "Common patterns — UploadKit", "Shared UploadPolicy, validators, errors, and JSON response shape.", "/docs/patterns/", "patterns", PATTERNS),
+        ("docs/storage/index.html", "Storage — UploadKit", "BYO S3-compatible storage with boto3 and aioboto3 for AWS S3 and MinIO.", "/docs/storage/", "storage", STORAGE),
         ("docs/security/index.html", "Security — UploadKit", "uploadkit-security validators and libmagic system requirements.", "/docs/security/", "security", SECURITY),
     ]
     for rel, title, desc, canonical, current, content in pages:

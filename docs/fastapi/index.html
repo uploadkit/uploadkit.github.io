@@ -59,6 +59,7 @@
         <ul class="docs-nav">
           <li><a href="/docs/core/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/">Common patterns</a></li>
+          <li><a href="/docs/storage/">Storage</a></li>
           <li><a href="/docs/security/">Security</a></li>
         </ul>
       </div>
@@ -131,7 +132,7 @@
           </div>
 
           <div id="tab-fastapi-async" class="tab-panel active" role="tabpanel">
-            <p class="section-note">Copy <code>AsyncS3Storage</code> from the <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>. Requires <code>pip install aioboto3</code>. Uses <code>as_async_source()</code> and <code>background_after_upload()</code>.</p>
+            <p class="section-note">Copy <code>AsyncS3Storage</code> from <a href="/docs/storage/">Storage</a>. Requires <code>pip install aioboto3</code>. Uses <code>as_async_source()</code> and <code>background_after_upload()</code>.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>main.py</code>
@@ -184,7 +185,7 @@ async def upload(file: UploadFile, background_tasks: BackgroundTasks):
           </div>
 
           <div id="tab-fastapi-sync" class="tab-panel" role="tabpanel">
-            <p class="section-note"><code>Boto3S3Storage</code> + <code>run_sync_upload</code>. Requires <code>pip install boto3</code>.</p>
+            <p class="section-note"><code>Boto3S3Storage</code> + <code>run_sync_upload</code>. Requires <code>pip install boto3</code>. Full class: <a href="/docs/storage/">Storage</a>.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>main.py</code>
@@ -240,9 +241,9 @@ async def upload_sync(file: UploadFile, background_tasks: BackgroundTasks):
         <p class="section-note">
           After-upload: <code>BackgroundTasks</code>, Celery-like <code>.delay</code>, or a plain callback.
           Full storage classes:
-          <a href="https://github.com/uploadkit/uploadkit-fastapi" target="_blank" rel="noopener">uploadkit-fastapi</a>
+          <a href="/docs/storage/">Storage</a>
           ·
-          <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>
+          <a href="https://github.com/uploadkit/uploadkit-fastapi" target="_blank" rel="noopener">uploadkit-fastapi</a>
         </p>
 
       </article>

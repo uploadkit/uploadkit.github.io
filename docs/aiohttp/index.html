@@ -59,6 +59,7 @@
         <ul class="docs-nav">
           <li><a href="/docs/core/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/">Common patterns</a></li>
+          <li><a href="/docs/storage/">Storage</a></li>
           <li><a href="/docs/security/">Security</a></li>
         </ul>
       </div>
@@ -218,7 +219,7 @@ async def upload_handler(request: web.Request) -&gt; web.Response:
           </div>
 
           <div id="tab-aiohttp-app" class="tab-panel" role="tabpanel">
-            <p class="section-note">Use <code>AsyncS3Storage</code> from the <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a> for AWS S3 or MinIO.</p>
+            <p class="section-note">Use <code>AsyncS3Storage</code> from <a href="/docs/storage/">Storage</a> for AWS S3 or MinIO.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>app.py</code>
@@ -227,7 +228,7 @@ async def upload_handler(request: web.Request) -&gt; web.Response:
             <div class="code-block-body">
               <pre><code class="language-python">from aiohttp import web
 from handlers import upload_handler
-# from myapp.s3_async import AsyncS3Storage  # copy from Core README
+# from myapp.s3_async import AsyncS3Storage  # see /docs/storage/
 
 async def notify(result) -&gt; None:
     ...
@@ -254,6 +255,9 @@ if __name__ == "__main__":
 
         <p class="section-note">
           Same Core async stack as FastAPI — only the <code>AsyncByteSource</code> adapter differs.
+          Storage:
+          <a href="/docs/storage/">Storage</a>
+          ·
           Docs:
           <a href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">uploadkit</a>
         </p>

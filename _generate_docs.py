@@ -159,6 +159,35 @@ def code_block(filename: str, lang: str, code: str, *, console: bool = False) ->
           </figure>"""
 
 
+def docs_table(
+    headers: list[str],
+    rows: list[list[str]],
+    *,
+    caption: str | None = None,
+    variant: str = "",
+) -> str:
+    """Build a semantic HTML data table for docs prose."""
+    cls = "docs-table"
+    if variant:
+        cls = f"{cls} docs-table--{variant}"
+    head_cells = "".join(f"<th scope=\"col\">{h}</th>" for h in headers)
+    body_rows = []
+    for row in rows:
+        cells = "".join(f"<td>{c}</td>" for c in row)
+        body_rows.append(f"              <tr>{cells}</tr>")
+    caption_html = f"\n            <caption>{caption}</caption>" if caption else ""
+    return f"""        <div class="table-wrap">
+          <table class="{cls}">{caption_html}
+            <thead>
+              <tr>{head_cells}</tr>
+            </thead>
+            <tbody>
+{chr(10).join(body_rows)}
+            </tbody>
+          </table>
+        </div>"""
+
+
 def install_tabs(prefix: str, pip: str, uv: str, poetry: str) -> str:
     return f"""          <div class="tabs nested-tabs install-tabs" data-tabs="install-{prefix}">
             <div class="tab-bar" role="tablist" aria-label="Install with">
@@ -1131,39 +1160,17 @@ PERFORMANCE = f"""
         <p class="section-lead">Choose <code>AsyncUploader(chunk_size=…)</code>, S3 multipart <code>part_size</code>, and uvicorn workers by typical file size and concurrency. Guidance below comes from UploadKit’s async/sync pipelines and k6 runs in the <a href="https://github.com/uploadkit/uploadkit-testing" target="_blank" rel="noopener">uploadkit-testing</a> <code>perf/</code> harness (MinIO + FastAPI, local Docker).</p>
 
         <h2>What actually exists</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Knob</th><th>Applies to</th><th>Default in Core / harness</th><th>Effect</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>AsyncUploader.chunk_size</code></td>
-                <td>Async only</td>
-                <td>Core <strong>1 MiB</strong>; harness often <strong>8 MiB</strong></td>
-                <td>Bytes read per loop → validators → storage writer</td>
-              </tr>
-              <tr>
-                <td>S3 multipart <code>part_size</code></td>
-                <td>Async S3/MinIO writer</td>
-                <td><strong>5 MiB</strong> (S3 minimum except last part)</td>
-                <td>How large each <code>upload_part</code> is</td>
-              </tr>
-              <tr>
-                <td>Sync “chunk”</td>
-                <td>—</td>
-                <td><strong>None</strong></td>
-                <td>Sync does one full <code>file.read()</code> then <code>put_object</code></td>
-              </tr>
-              <tr>
-                <td>Uvicorn workers</td>
-                <td>Process concurrency</td>
-                <td>Harness A/B used <strong>4</strong></td>
-                <td>Parallel uploads across processes</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+{docs_table(
+    ["Knob", "Applies to", "Default in Core / harness", "Effect"],
+    [
+        ["<code>AsyncUploader.chunk_size</code>", "Async only", "Core <strong>1 MiB</strong>; harness often <strong>8 MiB</strong>", "Bytes read per loop → validators → storage writer"],
+        ["S3 multipart <code>part_size</code>", "Async S3/MinIO writer", "<strong>5 MiB</strong> (S3 minimum except last part)", "How large each <code>upload_part</code> is"],
+        ["Sync “chunk”", "—", "<strong>None</strong>", "Sync does one full <code>file.read()</code> then <code>put_object</code>"],
+        ["Uvicorn workers", "Process concurrency", "Harness A/B used <strong>4</strong>", "Parallel uploads across processes"],
+    ],
+    caption="Upload tuning knobs",
+    variant="wide",
+)}
         <p>Sync has <strong>no chunk size</strong>. For large or concurrent files, prefer async. See <a href="/docs/core/">Core</a> and <a href="/docs/storage/">Storage</a>.</p>
 
         <h2>Measured results</h2>
@@ -1171,48 +1178,42 @@ PERFORMANCE = f"""
 
         <h3>Async read <code>chunk_size</code> — 1 MiB vs 8 MiB</h3>
         <p>Checksum <strong>on</strong>, <strong>1</strong> worker, async+sync mixed:</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Payload</th><th>1 MiB avg</th><th>8 MiB avg</th><th>Delta</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>10 MB PNG (40 reqs)</td><td>7.42 s</td><td>7.44 s</td><td>~0%</td></tr>
-              <tr><td>100 MB PDF (10 reqs)</td><td>35.74 s</td><td>35.28 s</td><td>~−1%</td></tr>
-            </tbody>
-          </table>
-        </div>
+{docs_table(
+    ["Payload", "1 MiB avg", "8 MiB avg", "Delta"],
+    [
+        ["10 MB PNG (40 reqs)", "7.42 s", "7.44 s", "~0%"],
+        ["100 MB PDF (10 reqs)", "35.74 s", "35.28 s", "~−1%"],
+    ],
+    caption="chunk_size A/B latency",
+    variant="compact",
+)}
         <p><strong>Conclusion:</strong> Changing async read chunk between 1–8 MiB barely moves end-to-end latency here. Pick for memory / simplicity, not raw speed.</p>
 
         <h3>S3 <code>part_size</code> — 5 MiB vs 16 MiB</h3>
         <p>Checksum <strong>off</strong>, <strong>4</strong> workers, <strong>async only</strong>:</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Payload</th><th>5 MiB avg</th><th>16 MiB avg</th><th>Delta</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>10 MB PNG (20 reqs)</td><td>3.90 s</td><td>3.85 s</td><td>~−1.5%</td></tr>
-              <tr><td>100 MB PDF (5 reqs)</td><td>17.41 s</td><td>18.10 s</td><td>~+4%</td></tr>
-            </tbody>
-          </table>
-        </div>
+{docs_table(
+    ["Payload", "5 MiB avg", "16 MiB avg", "Delta"],
+    [
+        ["10 MB PNG (20 reqs)", "3.90 s", "3.85 s", "~−1.5%"],
+        ["100 MB PDF (5 reqs)", "17.41 s", "18.10 s", "~+4%"],
+    ],
+    caption="part_size A/B latency",
+    variant="compact",
+)}
         <p><strong>Conclusion:</strong> 16 MiB parts did not clearly beat 5 MiB. Prefer <strong>5 MiB</strong> unless you re-benchmark on real AWS with higher concurrency.</p>
 
         <h3>What did move the needle</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Change</th><th>Effect on wall time</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Async vs sync for large files</td><td>Sync holds the whole object in RAM; avoid under load</td></tr>
-              <tr><td>Drop SHA-256 checksum</td><td>Large CPU save on big bodies</td></tr>
-              <tr><td>1 → 4 uvicorn workers</td><td>Better parallel throughput under concurrent VUs</td></tr>
-              <tr><td><code>chunk_size</code> / <code>part_size</code> tweaks</td><td>Small / noise-level in these runs</td></tr>
-            </tbody>
-          </table>
-        </div>
+{docs_table(
+    ["Change", "Effect on wall time"],
+    [
+        ["Async vs sync for large files", "Sync holds the whole object in RAM; avoid under load"],
+        ["Drop SHA-256 checksum", "Large CPU save on big bodies"],
+        ["1 → 4 uvicorn workers", "Better parallel throughput under concurrent VUs"],
+        ["<code>chunk_size</code> / <code>part_size</code> tweaks", "Small / noise-level in these runs"],
+    ],
+    caption="High-impact tuning levers",
+    variant="compact",
+)}
 
         <h2>Recommendation matrix</h2>
         <p>Let <strong>F</strong> = typical upload size, <strong>W</strong> = uvicorn (or Gunicorn) workers, <strong>C</strong> = expected concurrent uploads per worker (roughly k6 VUs / W under load).</p>
@@ -1223,34 +1224,29 @@ PERFORMANCE = f"""
         </ul>
 
         <h3>By average file size</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Average file size F</th><th>Path</th><th>Suggested <code>chunk_size</code></th><th>Suggested S3 <code>part_size</code></th><th>Notes</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>&lt; 1 MB</td><td>Sync OK</td><td>n/a</td><td>n/a (single <code>put</code>)</td><td>Keep it simple</td></tr>
-              <tr><td>1–10 MB</td><td>Prefer async</td><td><strong>1 MiB</strong></td><td><strong>5 MiB</strong></td><td>Part size ≥ file → often one part after buffer flush</td></tr>
-              <tr><td>10–50 MB</td><td>Async</td><td><strong>1–8 MiB</strong></td><td><strong>5–8 MiB</strong></td><td>8 MiB chunk is fine; no proven latency win over 1 MiB</td></tr>
-              <tr><td>50–200 MB</td><td>Async only</td><td><strong>8 MiB</strong></td><td><strong>5–8 MiB</strong></td><td>Avoid sync; consider disabling checksum if product allows</td></tr>
-              <tr><td>&gt; 200 MB</td><td>Async only</td><td><strong>8 MiB</strong></td><td><strong>8–16 MiB</strong></td><td>Re-benchmark <code>part_size</code> on target cloud</td></tr>
-            </tbody>
-          </table>
-        </div>
+{docs_table(
+    ["Average file size F", "Path", "Suggested <code>chunk_size</code>", "Suggested S3 <code>part_size</code>", "Notes"],
+    [
+        ["&lt; 1 MB", "Sync OK", "n/a", "n/a (single <code>put</code>)", "Keep it simple"],
+        ["1–10 MB", "Prefer async", "<strong>1 MiB</strong>", "<strong>5 MiB</strong>", "Part size ≥ file → often one part after buffer flush"],
+        ["10–50 MB", "Async", "<strong>1–8 MiB</strong>", "<strong>5–8 MiB</strong>", "8 MiB chunk is fine; no proven latency win over 1 MiB"],
+        ["50–200 MB", "Async only", "<strong>8 MiB</strong>", "<strong>5–8 MiB</strong>", "Avoid sync; consider disabling checksum if product allows"],
+        ["&gt; 200 MB", "Async only", "<strong>8 MiB</strong>", "<strong>8–16 MiB</strong>", "Re-benchmark <code>part_size</code> on target cloud"],
+    ],
+    caption="Suggested sizes by average upload",
+    variant="wide",
+)}
 
         <h3>By worker count</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Workers W</th><th>Concurrent uploads (total)</th><th>Guidance</th></tr>
-            </thead>
-            <tbody>
-              <tr><td><strong>1</strong></td><td>Low</td><td><code>chunk_size=1 MiB</code>, <code>part_size=5 MiB</code> is enough</td></tr>
-              <tr><td><strong>2–4</strong></td><td>Medium (e.g. 4–16 VUs)</td><td>Keep <code>chunk_size</code> ≤ <strong>8 MiB</strong>, <code>part_size</code> <strong>5 MiB</strong>; watch RAM ≈ <code>W×C×8 MiB</code></td></tr>
-              <tr><td><strong>8+</strong></td><td>High</td><td>Prefer smaller chunks (<strong>1 MiB</strong>) so <code>W×C×chunk</code> stays bounded; scale horizontally before enlarging buffers</td></tr>
-            </tbody>
-          </table>
-        </div>
+{docs_table(
+    ["Workers W", "Concurrent uploads (total)", "Guidance"],
+    [
+        ["<strong>1</strong>", "Low", "<code>chunk_size=1 MiB</code>, <code>part_size=5 MiB</code> is enough"],
+        ["<strong>2–4</strong>", "Medium (e.g. 4–16 VUs)", "Keep <code>chunk_size</code> ≤ <strong>8 MiB</strong>, <code>part_size</code> <strong>5 MiB</strong>; watch RAM ≈ <code>W×C×8 MiB</code>"],
+        ["<strong>8+</strong>", "High", "Prefer smaller chunks (<strong>1 MiB</strong>) so <code>W×C×chunk</code> stays bounded; scale horizontally before enlarging buffers"],
+    ],
+    caption="Suggested sizes by worker count",
+)}
         <p><strong>Rule of thumb:</strong> <code>W × C × chunk_size ≲ 10–20% of container memory</code>. Example: 4 workers × 4 concurrent × 8 MiB ≈ <strong>128 MiB</strong> buffers alone — fine on a 1–2 GiB service; raise carefully.</p>
 
         <h2>Decision cheat sheet</h2>

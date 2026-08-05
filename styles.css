@@ -801,7 +801,7 @@ body.docs-page main.docs-main {
 }
 
 .docs-prose {
-  max-width: 75ch;
+  max-width: min(56rem, 100%);
 }
 
 .docs-prose > h1 {
@@ -856,35 +856,99 @@ body.docs-page main.docs-main {
 
 .docs-prose .table-wrap {
   overflow-x: auto;
-  margin: 0 0 1.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-.docs-prose table {
+.docs-prose table,
+.docs-prose table.docs-table {
+  display: table;
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+  min-width: 36rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.docs-prose table.docs-table--compact {
+  min-width: 28rem;
+}
+
+.docs-prose table.docs-table--wide {
+  min-width: 48rem;
 }
 
 .docs-prose th,
-.docs-prose td {
+.docs-prose td,
+.docs-prose table.docs-table th,
+.docs-prose table.docs-table td {
+  display: table-cell;
   text-align: left;
   vertical-align: top;
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-  color: #94a3b8;
+  padding: 0.8rem 1rem;
+  border-right: 1px solid rgba(148, 163, 184, 0.16);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
 }
 
-.docs-prose th {
-  color: #e2e8f0;
+.docs-prose th:last-child,
+.docs-prose td:last-child,
+.docs-prose table.docs-table th:last-child,
+.docs-prose table.docs-table td:last-child {
+  border-right: none;
+}
+
+.docs-prose th,
+.docs-prose table.docs-table th {
+  color: #f8fafc;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.82rem;
   font-weight: 600;
-  background: rgba(15, 23, 42, 0.55);
+  letter-spacing: 0.01em;
+  background: rgba(55, 118, 171, 0.28);
   white-space: nowrap;
 }
 
-.docs-prose tbody tr:last-child td {
+.docs-prose tbody tr:nth-child(even) td,
+.docs-prose table.docs-table tbody tr:nth-child(even) td {
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.docs-prose tbody tr:hover td,
+.docs-prose table.docs-table tbody tr:hover td {
+  background: rgba(55, 118, 171, 0.14);
+}
+
+.docs-prose tbody tr:last-child td,
+.docs-prose table.docs-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.docs-prose table.docs-table td:first-child {
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+.docs-prose table.docs-table strong {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.docs-prose table.docs-table caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0.75rem 1rem 0.35rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
 }
 
 .docs-prose .tabs {

@@ -84,35 +84,16 @@
 
         <h2>What actually exists</h2>
         <div class="table-wrap">
-          <table>
+          <table class="docs-table docs-table--wide">
+            <caption>Upload tuning knobs</caption>
             <thead>
-              <tr><th>Knob</th><th>Applies to</th><th>Default in Core / harness</th><th>Effect</th></tr>
+              <tr><th scope="col">Knob</th><th scope="col">Applies to</th><th scope="col">Default in Core / harness</th><th scope="col">Effect</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td><code>AsyncUploader.chunk_size</code></td>
-                <td>Async only</td>
-                <td>Core <strong>1 MiB</strong>; harness often <strong>8 MiB</strong></td>
-                <td>Bytes read per loop → validators → storage writer</td>
-              </tr>
-              <tr>
-                <td>S3 multipart <code>part_size</code></td>
-                <td>Async S3/MinIO writer</td>
-                <td><strong>5 MiB</strong> (S3 minimum except last part)</td>
-                <td>How large each <code>upload_part</code> is</td>
-              </tr>
-              <tr>
-                <td>Sync “chunk”</td>
-                <td>—</td>
-                <td><strong>None</strong></td>
-                <td>Sync does one full <code>file.read()</code> then <code>put_object</code></td>
-              </tr>
-              <tr>
-                <td>Uvicorn workers</td>
-                <td>Process concurrency</td>
-                <td>Harness A/B used <strong>4</strong></td>
-                <td>Parallel uploads across processes</td>
-              </tr>
+              <tr><td><code>AsyncUploader.chunk_size</code></td><td>Async only</td><td>Core <strong>1 MiB</strong>; harness often <strong>8 MiB</strong></td><td>Bytes read per loop → validators → storage writer</td></tr>
+              <tr><td>S3 multipart <code>part_size</code></td><td>Async S3/MinIO writer</td><td><strong>5 MiB</strong> (S3 minimum except last part)</td><td>How large each <code>upload_part</code> is</td></tr>
+              <tr><td>Sync “chunk”</td><td>—</td><td><strong>None</strong></td><td>Sync does one full <code>file.read()</code> then <code>put_object</code></td></tr>
+              <tr><td>Uvicorn workers</td><td>Process concurrency</td><td>Harness A/B used <strong>4</strong></td><td>Parallel uploads across processes</td></tr>
             </tbody>
           </table>
         </div>
@@ -124,9 +105,10 @@
         <h3>Async read <code>chunk_size</code> — 1 MiB vs 8 MiB</h3>
         <p>Checksum <strong>on</strong>, <strong>1</strong> worker, async+sync mixed:</p>
         <div class="table-wrap">
-          <table>
+          <table class="docs-table docs-table--compact">
+            <caption>chunk_size A/B latency</caption>
             <thead>
-              <tr><th>Payload</th><th>1 MiB avg</th><th>8 MiB avg</th><th>Delta</th></tr>
+              <tr><th scope="col">Payload</th><th scope="col">1 MiB avg</th><th scope="col">8 MiB avg</th><th scope="col">Delta</th></tr>
             </thead>
             <tbody>
               <tr><td>10 MB PNG (40 reqs)</td><td>7.42 s</td><td>7.44 s</td><td>~0%</td></tr>
@@ -139,9 +121,10 @@
         <h3>S3 <code>part_size</code> — 5 MiB vs 16 MiB</h3>
         <p>Checksum <strong>off</strong>, <strong>4</strong> workers, <strong>async only</strong>:</p>
         <div class="table-wrap">
-          <table>
+          <table class="docs-table docs-table--compact">
+            <caption>part_size A/B latency</caption>
             <thead>
-              <tr><th>Payload</th><th>5 MiB avg</th><th>16 MiB avg</th><th>Delta</th></tr>
+              <tr><th scope="col">Payload</th><th scope="col">5 MiB avg</th><th scope="col">16 MiB avg</th><th scope="col">Delta</th></tr>
             </thead>
             <tbody>
               <tr><td>10 MB PNG (20 reqs)</td><td>3.90 s</td><td>3.85 s</td><td>~−1.5%</td></tr>
@@ -153,9 +136,10 @@
 
         <h3>What did move the needle</h3>
         <div class="table-wrap">
-          <table>
+          <table class="docs-table docs-table--compact">
+            <caption>High-impact tuning levers</caption>
             <thead>
-              <tr><th>Change</th><th>Effect on wall time</th></tr>
+              <tr><th scope="col">Change</th><th scope="col">Effect on wall time</th></tr>
             </thead>
             <tbody>
               <tr><td>Async vs sync for large files</td><td>Sync holds the whole object in RAM; avoid under load</td></tr>
@@ -176,9 +160,10 @@
 
         <h3>By average file size</h3>
         <div class="table-wrap">
-          <table>
+          <table class="docs-table docs-table--wide">
+            <caption>Suggested sizes by average upload</caption>
             <thead>
-              <tr><th>Average file size F</th><th>Path</th><th>Suggested <code>chunk_size</code></th><th>Suggested S3 <code>part_size</code></th><th>Notes</th></tr>
+              <tr><th scope="col">Average file size F</th><th scope="col">Path</th><th scope="col">Suggested <code>chunk_size</code></th><th scope="col">Suggested S3 <code>part_size</code></th><th scope="col">Notes</th></tr>
             </thead>
             <tbody>
               <tr><td>&lt; 1 MB</td><td>Sync OK</td><td>n/a</td><td>n/a (single <code>put</code>)</td><td>Keep it simple</td></tr>
@@ -192,9 +177,10 @@
 
         <h3>By worker count</h3>
         <div class="table-wrap">
-          <table>
+          <table class="docs-table">
+            <caption>Suggested sizes by worker count</caption>
             <thead>
-              <tr><th>Workers W</th><th>Concurrent uploads (total)</th><th>Guidance</th></tr>
+              <tr><th scope="col">Workers W</th><th scope="col">Concurrent uploads (total)</th><th scope="col">Guidance</th></tr>
             </thead>
             <tbody>
               <tr><td><strong>1</strong></td><td>Low</td><td><code>chunk_size=1 MiB</code>, <code>part_size=5 MiB</code> is enough</td></tr>

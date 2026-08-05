@@ -60,6 +60,7 @@
           <li><a href="/docs/core/" class="active" aria-current="page"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/">Common patterns</a></li>
           <li><a href="/docs/storage/">Storage</a></li>
+          <li><a href="/docs/performance/">Performance</a></li>
           <li><a href="/docs/security/">Security</a></li>
         </ul>
       </div>
@@ -191,7 +192,7 @@ result = Uploader(policy, storage).upload(
           </div>
 
           <div id="tab-core-async" class="tab-panel" role="tabpanel">
-            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class: <a href="/docs/storage/">Storage</a>.</p>
+            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class: <a href="/docs/storage/">Storage</a>. Tune <code>chunk_size</code> and multipart part size in <a href="/docs/performance/">Performance</a>.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>example_async.py</code>
@@ -232,6 +233,9 @@ result = await AsyncUploader(policy, async_storage).upload(
         <p class="section-note">
           Storage providers:
           <a href="/docs/storage/">Storage</a>
+          ·
+          Tuning:
+          <a href="/docs/performance/">Performance</a>
           ·
           Docs:
           <a href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">uploadkit</a>

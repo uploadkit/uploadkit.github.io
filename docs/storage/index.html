@@ -60,6 +60,7 @@
           <li><a href="/docs/core/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/">Common patterns</a></li>
           <li><a href="/docs/storage/" class="active" aria-current="page">Storage</a></li>
+          <li><a href="/docs/performance/">Performance</a></li>
           <li><a href="/docs/security/">Security</a></li>
         </ul>
       </div>
@@ -200,7 +201,7 @@ storage = Boto3S3Storage(
           </figure>
           </div>
           <div id="tab-storage-async" class="tab-panel" role="tabpanel">
-            <p class="section-note">Multipart streaming writer (5 MiB part size — S3/MinIO rule except the last part). Requires <code>pip install aioboto3</code>.</p>
+            <p class="section-note">Multipart streaming writer (5 MiB part size — S3/MinIO rule except the last part). Requires <code>pip install aioboto3</code>. Choosing part size vs <code>AsyncUploader.chunk_size</code> and workers: <a href="/docs/performance/">Performance</a>.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>s3_async.py</code>
@@ -366,6 +367,8 @@ async_storage = AsyncS3Storage(
         <p class="section-note">
           Shared policy and error conventions:
           <a href="/docs/patterns/">Common patterns</a>.
+          Chunk / part size and workers:
+          <a href="/docs/performance/">Performance</a>.
           GitHub copy of these samples:
           <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>.
         </p>

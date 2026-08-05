@@ -854,6 +854,39 @@ body.docs-page main.docs-main {
   margin-bottom: 1.25rem;
 }
 
+.docs-prose .table-wrap {
+  overflow-x: auto;
+  margin: 0 0 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+}
+
+.docs-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.docs-prose th,
+.docs-prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+.docs-prose th {
+  color: #e2e8f0;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.55);
+  white-space: nowrap;
+}
+
+.docs-prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .docs-prose .tabs {
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;

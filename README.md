@@ -8,8 +8,9 @@ Public documentation site for [UploadKit](https://uploadkit.github.io/) — modu
 - `/docs/` — getting started and guides (sidebar + Pagefind search)
 - `/docs/core/`, `/docs/django/`, `/docs/fastapi/`, `/docs/aiohttp/`, `/docs/odoo/`, `/docs/flask/`
 - `/docs/patterns/` — shared policy, validators, errors, JSON shape
-- `/docs/security/` — `uploadkit-security` + libmagic
 - `/docs/storage/` — boto3 / aioboto3 for AWS S3 and MinIO
+- `/docs/performance/` — chunk size, S3 part size, and workers by file size
+- `/docs/security/` — `uploadkit-security` + libmagic
 
 Hand-authored static HTML/CSS/JS. Nested tabs (pip/uv/poetry, sync/async) stay as tabs; framework guides are real URLs.
 

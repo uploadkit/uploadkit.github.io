@@ -66,6 +66,7 @@ HEAD = """<!DOCTYPE html>
           <li><a href="/docs/core/"{active_core}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--python" aria-hidden="true"></span>Core</span></a></li>
           <li><a href="/docs/patterns/"{active_patterns}>Common patterns</a></li>
           <li><a href="/docs/storage/"{active_storage}>Storage</a></li>
+          <li><a href="/docs/performance/"{active_performance}>Performance</a></li>
           <li><a href="/docs/security/"{active_security}>Security</a></li>
         </ul>
       </div>
@@ -109,6 +110,7 @@ ACTIVE_KEYS = (
     "core",
     "patterns",
     "storage",
+    "performance",
     "security",
     "django",
     "fastapi",
@@ -194,6 +196,7 @@ GETTING = f"""
         <ul>
           <li><a href="/docs/core/">Core reference</a> — sync <code>Uploader</code> and async <code>AsyncUploader</code></li>
           <li><a href="/docs/storage/">Storage</a> — boto3 / aioboto3 for AWS S3 and MinIO</li>
+          <li><a href="/docs/performance/">Performance</a> — chunk size, S3 part size, and workers by file size</li>
           <li><a href="/docs/patterns/">Common patterns</a> — policy, validators, errors, JSON shape</li>
           <li><a href="/docs/django/">Django</a>, <a href="/docs/fastapi/">FastAPI</a>, <a href="/docs/aiohttp/">aiohttp</a>, or <a href="/docs/odoo/">Odoo</a> — adapter glue</li>
           <li><a href="/docs/security/">Security</a> — <code>uploadkit-security</code> and libmagic</li>
@@ -299,7 +302,7 @@ CORE = f"""
           </div>
 
           <div id="tab-core-async" class="tab-panel" role="tabpanel">
-            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class: <a href="/docs/storage/">Storage</a>.</p>
+            <p class="section-note"><code>AsyncS3Storage</code> (aioboto3 multipart) — same AWS vs MinIO wiring. Full writer class: <a href="/docs/storage/">Storage</a>. Tune <code>chunk_size</code> and multipart part size in <a href="/docs/performance/">Performance</a>.</p>
 {code_block("example_async.py", "python", CORE_ASYNC)}
           </div>
         </div>
@@ -307,6 +310,9 @@ CORE = f"""
         <p class="section-note">
           Storage providers:
           <a href="/docs/storage/">Storage</a>
+          ·
+          Tuning:
+          <a href="/docs/performance/">Performance</a>
           ·
           Docs:
           <a href="https://github.com/uploadkit/uploadkit" target="_blank" rel="noopener">uploadkit</a>
@@ -1080,7 +1086,7 @@ STORAGE = f"""
 {code_block("s3_sync.py", "python", STORAGE_SYNC)}
           </div>
           <div id="tab-storage-async" class="tab-panel" role="tabpanel">
-            <p class="section-note">Multipart streaming writer (5 MiB part size — S3/MinIO rule except the last part). Requires <code>pip install aioboto3</code>.</p>
+            <p class="section-note">Multipart streaming writer (5 MiB part size — S3/MinIO rule except the last part). Requires <code>pip install aioboto3</code>. Choosing part size vs <code>AsyncUploader.chunk_size</code> and workers: <a href="/docs/performance/">Performance</a>.</p>
 {code_block("s3_async.py", "python", STORAGE_ASYNC)}
           </div>
         </div>
@@ -1104,8 +1110,176 @@ STORAGE = f"""
         <p class="section-note">
           Shared policy and error conventions:
           <a href="/docs/patterns/">Common patterns</a>.
+          Chunk / part size and workers:
+          <a href="/docs/performance/">Performance</a>.
           GitHub copy of these samples:
           <a href="https://github.com/uploadkit/uploadkit#storage-examples-aws-s3-and-minio" target="_blank" rel="noopener">Core README</a>.
+        </p>
+"""
+
+PERFORMANCE_CHEAT = """if F < 1MB:
+    use sync Uploader (or async; either fine)
+elif need max throughput under concurrency:
+    async + checksum off (if allowed) + W=2..4 + chunk_size=1MiB + part_size=5MiB
+elif need integrity (sha256) + large F:
+    async + checksum on + chunk_size=1..8MiB + part_size=5MiB + W sized for RAM
+else:
+    async + chunk_size=1MiB + part_size=5MiB   # safe default"""
+
+PERFORMANCE = f"""
+        <h1>Performance</h1>
+        <p class="section-lead">Choose <code>AsyncUploader(chunk_size=…)</code>, S3 multipart <code>part_size</code>, and uvicorn workers by typical file size and concurrency. Guidance below comes from UploadKit’s async/sync pipelines and k6 runs in the <a href="https://github.com/uploadkit/uploadkit-testing" target="_blank" rel="noopener">uploadkit-testing</a> <code>perf/</code> harness (MinIO + FastAPI, local Docker).</p>
+
+        <h2>What actually exists</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Knob</th><th>Applies to</th><th>Default in Core / harness</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AsyncUploader.chunk_size</code></td>
+                <td>Async only</td>
+                <td>Core <strong>1 MiB</strong>; harness often <strong>8 MiB</strong></td>
+                <td>Bytes read per loop → validators → storage writer</td>
+              </tr>
+              <tr>
+                <td>S3 multipart <code>part_size</code></td>
+                <td>Async S3/MinIO writer</td>
+                <td><strong>5 MiB</strong> (S3 minimum except last part)</td>
+                <td>How large each <code>upload_part</code> is</td>
+              </tr>
+              <tr>
+                <td>Sync “chunk”</td>
+                <td>—</td>
+                <td><strong>None</strong></td>
+                <td>Sync does one full <code>file.read()</code> then <code>put_object</code></td>
+              </tr>
+              <tr>
+                <td>Uvicorn workers</td>
+                <td>Process concurrency</td>
+                <td>Harness A/B used <strong>4</strong></td>
+                <td>Parallel uploads across processes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Sync has <strong>no chunk size</strong>. For large or concurrent files, prefer async. See <a href="/docs/core/">Core</a> and <a href="/docs/storage/">Storage</a>.</p>
+
+        <h2>Measured results</h2>
+        <p class="section-note">Environment: Docker Desktop, MinIO + API on one machine, k6 on host. Treat small % deltas as noise.</p>
+
+        <h3>Async read <code>chunk_size</code> — 1 MiB vs 8 MiB</h3>
+        <p>Checksum <strong>on</strong>, <strong>1</strong> worker, async+sync mixed:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Payload</th><th>1 MiB avg</th><th>8 MiB avg</th><th>Delta</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>10 MB PNG (40 reqs)</td><td>7.42 s</td><td>7.44 s</td><td>~0%</td></tr>
+              <tr><td>100 MB PDF (10 reqs)</td><td>35.74 s</td><td>35.28 s</td><td>~−1%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Conclusion:</strong> Changing async read chunk between 1–8 MiB barely moves end-to-end latency here. Pick for memory / simplicity, not raw speed.</p>
+
+        <h3>S3 <code>part_size</code> — 5 MiB vs 16 MiB</h3>
+        <p>Checksum <strong>off</strong>, <strong>4</strong> workers, <strong>async only</strong>:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Payload</th><th>5 MiB avg</th><th>16 MiB avg</th><th>Delta</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>10 MB PNG (20 reqs)</td><td>3.90 s</td><td>3.85 s</td><td>~−1.5%</td></tr>
+              <tr><td>100 MB PDF (5 reqs)</td><td>17.41 s</td><td>18.10 s</td><td>~+4%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Conclusion:</strong> 16 MiB parts did not clearly beat 5 MiB. Prefer <strong>5 MiB</strong> unless you re-benchmark on real AWS with higher concurrency.</p>
+
+        <h3>What did move the needle</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Change</th><th>Effect on wall time</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Async vs sync for large files</td><td>Sync holds the whole object in RAM; avoid under load</td></tr>
+              <tr><td>Drop SHA-256 checksum</td><td>Large CPU save on big bodies</td></tr>
+              <tr><td>1 → 4 uvicorn workers</td><td>Better parallel throughput under concurrent VUs</td></tr>
+              <tr><td><code>chunk_size</code> / <code>part_size</code> tweaks</td><td>Small / noise-level in these runs</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Recommendation matrix</h2>
+        <p>Let <strong>F</strong> = typical upload size, <strong>W</strong> = uvicorn (or Gunicorn) workers, <strong>C</strong> = expected concurrent uploads per worker (roughly k6 VUs / W under load).</p>
+        <p>Peak RAM ballpark:</p>
+        <ul>
+          <li><strong>Async:</strong> ≈ <code>W × C × max(chunk_size, part_size)</code> (+ small overhead)</li>
+          <li><strong>Sync:</strong> ≈ <code>W × C × F</code> (full file buffered)</li>
+        </ul>
+
+        <h3>By average file size</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Average file size F</th><th>Path</th><th>Suggested <code>chunk_size</code></th><th>Suggested S3 <code>part_size</code></th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>&lt; 1 MB</td><td>Sync OK</td><td>n/a</td><td>n/a (single <code>put</code>)</td><td>Keep it simple</td></tr>
+              <tr><td>1–10 MB</td><td>Prefer async</td><td><strong>1 MiB</strong></td><td><strong>5 MiB</strong></td><td>Part size ≥ file → often one part after buffer flush</td></tr>
+              <tr><td>10–50 MB</td><td>Async</td><td><strong>1–8 MiB</strong></td><td><strong>5–8 MiB</strong></td><td>8 MiB chunk is fine; no proven latency win over 1 MiB</td></tr>
+              <tr><td>50–200 MB</td><td>Async only</td><td><strong>8 MiB</strong></td><td><strong>5–8 MiB</strong></td><td>Avoid sync; consider disabling checksum if product allows</td></tr>
+              <tr><td>&gt; 200 MB</td><td>Async only</td><td><strong>8 MiB</strong></td><td><strong>8–16 MiB</strong></td><td>Re-benchmark <code>part_size</code> on target cloud</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>By worker count</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Workers W</th><th>Concurrent uploads (total)</th><th>Guidance</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>1</strong></td><td>Low</td><td><code>chunk_size=1 MiB</code>, <code>part_size=5 MiB</code> is enough</td></tr>
+              <tr><td><strong>2–4</strong></td><td>Medium (e.g. 4–16 VUs)</td><td>Keep <code>chunk_size</code> ≤ <strong>8 MiB</strong>, <code>part_size</code> <strong>5 MiB</strong>; watch RAM ≈ <code>W×C×8 MiB</code></td></tr>
+              <tr><td><strong>8+</strong></td><td>High</td><td>Prefer smaller chunks (<strong>1 MiB</strong>) so <code>W×C×chunk</code> stays bounded; scale horizontally before enlarging buffers</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Rule of thumb:</strong> <code>W × C × chunk_size ≲ 10–20% of container memory</code>. Example: 4 workers × 4 concurrent × 8 MiB ≈ <strong>128 MiB</strong> buffers alone — fine on a 1–2 GiB service; raise carefully.</p>
+
+        <h2>Decision cheat sheet</h2>
+{code_block("decision.txt", "text", PERFORMANCE_CHEAT)}
+        <p>Do <strong>not</strong> expect “5–8 MiB chunks are always faster than 1 MiB” — local A/B did not support that for e2e latency.</p>
+
+        <h2>Reproduce</h2>
+        <p>Harness env knobs: <code>ASYNC_CHUNK_SIZE</code>, <code>S3_PART_SIZE</code>, <code>ENABLE_CHECKSUM</code>, <code>UVICORN_WORKERS</code> (reported on <code>GET /health</code>). Part-size A/B:</p>
+{code_block("Shell", "bash", "cd uploadkit-testing/perf\n./scripts/ab_part_size.sh", console=True)}
+
+        <h2>Limitations</h2>
+        <ul>
+          <li>Local MinIO on Docker Desktop — not AWS cross-AZ latency.</li>
+          <li>Small iteration counts for PDF A/B (5 reqs); treat ± a few % as noise.</li>
+          <li>Async+sync mixed runs inflate averages vs async-only.</li>
+          <li>No parallel multipart uploads yet (parts are sequential) — future work may beat size tuning.</li>
+        </ul>
+        <p>When in doubt: <strong>async, <code>chunk_size=1 MiB</code>, <code>part_size=5 MiB</code>, size workers to concurrency and RAM</strong>, then re-run load tests on your real target.</p>
+
+        <p class="section-note">
+          Related:
+          <a href="/docs/core/">Core</a>
+          ·
+          <a href="/docs/storage/">Storage</a>
+          ·
+          <a href="/docs/fastapi/">FastAPI</a>
+          ·
+          Full markdown guide:
+          <a href="https://github.com/uploadkit/uploadkit-testing/blob/main/perf/CHUNK_SIZE_GUIDE.md" target="_blank" rel="noopener">CHUNK_SIZE_GUIDE.md</a>
         </p>
 """
 
@@ -1378,6 +1552,7 @@ def main() -> None:
         ("docs/flask/index.html", "Flask — UploadKit", "Flask adapters coming soon.", "/docs/flask/", "flask", FLASK),
         ("docs/patterns/index.html", "Common patterns — UploadKit", "Shared UploadPolicy, validators, errors, and JSON response shape.", "/docs/patterns/", "patterns", PATTERNS),
         ("docs/storage/index.html", "Storage — UploadKit", "BYO S3-compatible storage with boto3 and aioboto3 for AWS S3 and MinIO.", "/docs/storage/", "storage", STORAGE),
+        ("docs/performance/index.html", "Performance — UploadKit", "Choose chunk size, S3 part size, and workers by file size and concurrency.", "/docs/performance/", "performance", PERFORMANCE),
         ("docs/security/index.html", "Security — UploadKit", "uploadkit-security validators and libmagic system requirements.", "/docs/security/", "security", SECURITY),
     ]
     for rel, title, desc, canonical, current, content in pages:

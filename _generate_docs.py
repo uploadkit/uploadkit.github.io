@@ -885,7 +885,7 @@ def get_provider():
 
 FLASK = f"""
         <h1>Flask</h1>
-        <p class="section-lead">Thin integration over Core. Adapts Werkzeug <code>FileStorage</code> and maps errors to JSON. Pair with <code>uploadkit-security</code>. Python 3.10+, Flask 3.0+.</p>
+        <p class="section-lead">Thin integration over Core. Adapts Werkzeug <code>FileStorage</code>, maps <code>UploaderError</code> to JSON, and resolves storage from <code>app.config</code>. Pair with <code>uploadkit-security</code>. Python 3.10+, Flask 3.0+.</p>
 
         <h2>Install</h2>
 {install_tabs(
@@ -896,7 +896,7 @@ FLASK = f"""
 )}
 
         <h2>Adapter glue</h2>
-        <p class="section-note">Policy setup, validators, <code>UploaderError</code>, and the JSON response shape are shared — see <a href="/docs/patterns/">Common patterns</a>.</p>
+        <p class="section-note">Policy setup, validators, <code>UploaderError</code>, and the JSON response shape are shared — see <a href="/docs/patterns/">Common patterns</a>. <code>as_uploadable()</code> maps <code>FileStorage.filename</code> → Core <code>name</code> (form-field <code>name</code> is not the upload name).</p>
 
         <div class="tabs nested-tabs" data-tabs="flask-inner">
           <div class="tab-bar" role="tablist" aria-label="Flask examples">
@@ -905,15 +905,22 @@ FLASK = f"""
           </div>
 
           <div id="tab-flask-view" class="tab-panel active" role="tabpanel">
-            <p class="section-note">Uses <code>get_storage_provider()</code> → <code>Boto3S3Storage</code> (AWS S3 or MinIO) and <code>as_uploadable()</code>.</p>
+            <p class="section-note">Uses <code>get_storage_provider()</code> → <code>Boto3S3Storage</code> (AWS S3 or MinIO), <code>as_uploadable()</code>, and <code>json_error_response()</code>.</p>
 {code_block("views.py", "python", FLASK_VIEW)}
           </div>
 
           <div id="tab-flask-settings" class="tab-panel" role="tabpanel">
-            <p class="section-note">AWS: leave <code>AWS_S3_ENDPOINT_URL</code> unset. MinIO: set it to your endpoint.</p>
+            <p class="section-note">Set <code>UPLOADKIT_STORAGE_PROVIDER</code> to a callable or dotted path. AWS: leave <code>AWS_S3_ENDPOINT_URL</code> unset. MinIO: set it to your endpoint.</p>
 {code_block("app.config + storage.py", "python", FLASK_SETTINGS)}
           </div>
         </div>
+
+        <h2>Public API</h2>
+        <ul>
+          <li><code>as_uploadable</code> — adapt <code>werkzeug.FileStorage</code> for sync <code>Uploader</code></li>
+          <li><code>get_storage_provider</code> / <code>ImproperlyConfiguredUploadKit</code> — resolve factory from <code>current_app.config</code></li>
+          <li><code>json_error_response</code> / <code>status_for_error</code> / <code>error_payload</code> — map Core errors to Flask JSON</li>
+        </ul>
 
         <p class="section-note">
           Full <code>Boto3S3Storage</code> class:

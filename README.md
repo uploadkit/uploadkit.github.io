@@ -36,7 +36,16 @@ npx pagefind@1.3.0 --site . --output-subdir pagefind
 
 ## Deploy
 
-GitHub Actions (`.github/workflows/pages.yml`) indexes with Pagefind and deploys via GitHub Pages.
+Static site on `main` (including committed `pagefind/` index). GitHub Pages is configured to publish from the **`main` branch root**.
+
+Optional: `.github/workflows/pages.yml` can rebuild Pagefind and deploy via Actions (`workflow_dispatch` / push). Prefer branch publish when Actions runners are unavailable.
+
+After content edits:
+
+```bash
+python3 _generate_docs.py
+npx pagefind@1.3.0 --site . --output-subdir pagefind --glob "{index.html,docs/**/*.html}"
+```
 
 In the repo **Settings → Pages**, set source to **GitHub Actions** (not “Deploy from a branch”) so the workflow can publish.
 

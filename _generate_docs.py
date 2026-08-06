@@ -77,7 +77,7 @@ HEAD = """<!DOCTYPE html>
           <li><a href="/docs/fastapi/"{active_fastapi}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--fastapi" aria-hidden="true"></span>FastAPI</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/aiohttp/"{active_aiohttp}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--aiohttp" aria-hidden="true"></span>aiohttp</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/odoo/"{active_odoo}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--odoo" aria-hidden="true"></span>Odoo</span> <span class="badge badge-live">Supported</span></a></li>
-          <li><a href="/docs/flask/"{active_flask}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-soon">Soon</span></a></li>
+          <li><a href="/docs/flask/"{active_flask}><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-live">Supported</span></a></li>
         </ul>
       </div>
     </aside>
@@ -831,11 +831,96 @@ ODOO = f"""
         </p>
 """
 
-FLASK = """
+FLASK_VIEW = """from flask import current_app, jsonify, request
+from uploadkit import Uploader, UploadPolicy, UploaderError
+from uploadkit_flask import as_uploadable, get_storage_provider, json_error_response
+from uploadkit_security import default_validators
+
+@app.post("/upload")
+def upload_view():
+    storage = get_storage_provider()
+    policy = UploadPolicy(
+        max_size=5 * 1024 * 1024,
+        allowed_extensions=frozenset({"png"}),
+        allowed_mime_types=frozenset({"image/png"}),
+        validators=default_validators(),
+    )
+    uploaded = request.files["file"]
+    try:
+        result = Uploader(policy, storage).upload(
+            as_uploadable(uploaded),
+            bucket=current_app.config["UPLOADKIT_BUCKET"],
+            object_name=uploaded.filename,
+        )
+    except UploaderError as exc:
+        return json_error_response(exc)
+    return jsonify({
+        "object_name": result.object_name,
+        "sha256": result.sha256,
+        "etag": result.etag,
+    })"""
+
+FLASK_SETTINGS = """# app.config — AWS S3
+app.config["AWS_ACCESS_KEY_ID"] = "AKIA..."
+app.config["AWS_SECRET_ACCESS_KEY"] = "..."
+app.config["AWS_S3_REGION_NAME"] = "eu-west-1"
+app.config["UPLOADKIT_STORAGE_PROVIDER"] = "myapp.storage.get_provider"
+app.config["UPLOADKIT_BUCKET"] = "my-prod-bucket"
+
+# app.config — MinIO (instead of / in addition to keys)
+# app.config["AWS_S3_ENDPOINT_URL"] = "http://127.0.0.1:9000"
+# app.config["AWS_ACCESS_KEY_ID"] = "minioadmin"
+# app.config["AWS_SECRET_ACCESS_KEY"] = "minioadmin"
+
+# myapp/storage.py — Boto3S3Storage + get_provider()
+# (full class in /docs/storage/)
+def get_provider():
+    from flask import current_app
+    return Boto3S3Storage(
+        access_key=current_app.config["AWS_ACCESS_KEY_ID"],
+        secret_key=current_app.config["AWS_SECRET_ACCESS_KEY"],
+        region=current_app.config.get("AWS_S3_REGION_NAME", "us-east-1"),
+        endpoint_url=current_app.config.get("AWS_S3_ENDPOINT_URL"),
+    )"""
+
+FLASK = f"""
         <h1>Flask</h1>
-        <p class="section-lead">Flask-specific adapters only. Same ecosystem boundaries as Django and FastAPI.</p>
-        <p class="pkg">uploadkit-flask</p>
-        <p class="section-note">Coming soon — adapters and response helpers only.</p>
+        <p class="section-lead">Thin integration over Core. Adapts Werkzeug <code>FileStorage</code> and maps errors to JSON. Pair with <code>uploadkit-security</code>. Python 3.10+, Flask 3.0+.</p>
+
+        <h2>Install</h2>
+{install_tabs(
+    "flask",
+    "pip install uploadkit-flask uploadkit-security",
+    "uv add uploadkit-flask uploadkit-security",
+    "poetry add uploadkit-flask uploadkit-security",
+)}
+
+        <h2>Adapter glue</h2>
+        <p class="section-note">Policy setup, validators, <code>UploaderError</code>, and the JSON response shape are shared — see <a href="/docs/patterns/">Common patterns</a>.</p>
+
+        <div class="tabs nested-tabs" data-tabs="flask-inner">
+          <div class="tab-bar" role="tablist" aria-label="Flask examples">
+            <button type="button" class="tab-btn active" data-tab="tab-flask-view" role="tab" aria-selected="true">Route</button>
+            <button type="button" class="tab-btn" data-tab="tab-flask-settings" role="tab" aria-selected="false">Config</button>
+          </div>
+
+          <div id="tab-flask-view" class="tab-panel active" role="tabpanel">
+            <p class="section-note">Uses <code>get_storage_provider()</code> → <code>Boto3S3Storage</code> (AWS S3 or MinIO) and <code>as_uploadable()</code>.</p>
+{code_block("views.py", "python", FLASK_VIEW)}
+          </div>
+
+          <div id="tab-flask-settings" class="tab-panel" role="tabpanel">
+            <p class="section-note">AWS: leave <code>AWS_S3_ENDPOINT_URL</code> unset. MinIO: set it to your endpoint.</p>
+{code_block("app.config + storage.py", "python", FLASK_SETTINGS)}
+          </div>
+        </div>
+
+        <p class="section-note">
+          Full <code>Boto3S3Storage</code> class:
+          <a href="/docs/storage/">Storage</a>
+          ·
+          <a href="https://github.com/uploadkit/uploadkit-flask" target="_blank" rel="noopener">uploadkit-flask README</a>
+        </p>
 """
 
 PATTERNS_POLICY = """from uploadkit import UploadPolicy
@@ -859,8 +944,8 @@ async_policy = UploadPolicy(
 
 PATTERNS_ERROR = """from uploadkit import UploaderError
 
-# Django / FastAPI / Odoo helpers
-from uploadkit_django import json_error_response  # or uploadkit_fastapi / uploadkit_odoo
+# Django / FastAPI / Flask / Odoo helpers
+from uploadkit_django import json_error_response  # or uploadkit_fastapi / uploadkit_flask / uploadkit_odoo
 try:
     result = Uploader(policy, storage).upload(...)
 except UploaderError as exc:
@@ -888,7 +973,7 @@ PATTERNS = f"""
 {code_block("policy.py", "python", PATTERNS_POLICY)}
 
         <h2>Error handling</h2>
-        <p>Catch <code>UploaderError</code>. Django, FastAPI, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
+        <p>Catch <code>UploaderError</code>. Django, FastAPI, Flask, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
 {code_block("errors.py", "python", PATTERNS_ERROR)}
 
         <h2>Success JSON shape</h2>
@@ -1545,7 +1630,7 @@ def main() -> None:
         ("docs/fastapi/index.html", "FastAPI — UploadKit", "FastAPI adapters, BackgroundTasks, and async/sync helpers.", "/docs/fastapi/", "fastapi", FASTAPI),
         ("docs/aiohttp/index.html", "aiohttp — UploadKit", "Use UploadKit Core directly with aiohttp multipart.", "/docs/aiohttp/", "aiohttp", AIOHTTP),
         ("docs/odoo/index.html", "Odoo — UploadKit", "Odoo adapters, Werkzeug FileStorage glue, and optional Odoo 17/18 addon.", "/docs/odoo/", "odoo", ODOO),
-        ("docs/flask/index.html", "Flask — UploadKit", "Flask adapters coming soon.", "/docs/flask/", "flask", FLASK),
+        ("docs/flask/index.html", "Flask — UploadKit", "Flask adapters, FileStorage glue, and app.config storage helper.", "/docs/flask/", "flask", FLASK),
         ("docs/patterns/index.html", "Common patterns — UploadKit", "Shared UploadPolicy, validators, errors, and JSON response shape.", "/docs/patterns/", "patterns", PATTERNS),
         ("docs/storage/index.html", "Storage — UploadKit", "BYO S3-compatible storage with boto3 and aioboto3 for AWS S3 and MinIO.", "/docs/storage/", "storage", STORAGE),
         ("docs/performance/index.html", "Performance — UploadKit", "Choose chunk size, S3 part size, and workers by file size and concurrency.", "/docs/performance/", "performance", PERFORMANCE),

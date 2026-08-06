@@ -71,7 +71,7 @@
           <li><a href="/docs/fastapi/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--fastapi" aria-hidden="true"></span>FastAPI</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/aiohttp/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--aiohttp" aria-hidden="true"></span>aiohttp</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/odoo/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--odoo" aria-hidden="true"></span>Odoo</span> <span class="badge badge-live">Supported</span></a></li>
-          <li><a href="/docs/flask/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-soon">Soon</span></a></li>
+          <li><a href="/docs/flask/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-live">Supported</span></a></li>
         </ul>
       </div>
     </aside>
@@ -112,7 +112,7 @@ async_policy = UploadPolicy(
           </figure>
 
         <h2>Error handling</h2>
-        <p>Catch <code>UploaderError</code>. Django, FastAPI, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
+        <p>Catch <code>UploaderError</code>. Django, FastAPI, Flask, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
           <figure class="code-block">
             <figcaption class="code-block-caption">
               <code>errors.py</code>
@@ -121,8 +121,8 @@ async_policy = UploadPolicy(
             <div class="code-block-body">
               <pre><code class="language-python">from uploadkit import UploaderError
 
-# Django / FastAPI / Odoo helpers
-from uploadkit_django import json_error_response  # or uploadkit_fastapi / uploadkit_odoo
+# Django / FastAPI / Flask / Odoo helpers
+from uploadkit_django import json_error_response  # or uploadkit_fastapi / uploadkit_flask / uploadkit_odoo
 try:
     result = Uploader(policy, storage).upload(...)
 except UploaderError as exc:

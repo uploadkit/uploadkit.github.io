@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flask — UploadKit</title>
-  <meta name="description" content="Flask adapters coming soon.">
+  <meta name="description" content="Flask adapters, FileStorage glue, and app.config storage helper.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#050510">
   <meta name="color-scheme" content="dark">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="UploadKit">
   <meta property="og:title" content="Flask — UploadKit">
-  <meta property="og:description" content="Flask adapters coming soon.">
+  <meta property="og:description" content="Flask adapters, FileStorage glue, and app.config storage helper.">
   <meta property="og:url" content="https://uploadkit.github.io/docs/flask/">
   <meta property="og:image" content="https://uploadkit.github.io/uploadkit-Fav.png">
 
@@ -71,7 +71,7 @@
           <li><a href="/docs/fastapi/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--fastapi" aria-hidden="true"></span>FastAPI</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/aiohttp/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--aiohttp" aria-hidden="true"></span>aiohttp</span> <span class="badge badge-live">Supported</span></a></li>
           <li><a href="/docs/odoo/"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--odoo" aria-hidden="true"></span>Odoo</span> <span class="badge badge-live">Supported</span></a></li>
-          <li><a href="/docs/flask/" class="active" aria-current="page"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-soon">Soon</span></a></li>
+          <li><a href="/docs/flask/" class="active" aria-current="page"><span class="docs-nav-link-inner"><span class="tab-icon tab-icon--flask" aria-hidden="true"></span>Flask</span> <span class="badge badge-live">Supported</span></a></li>
         </ul>
       </div>
     </aside>
@@ -80,9 +80,140 @@
       <article class="docs-prose" data-pagefind-body>
 
         <h1>Flask</h1>
-        <p class="section-lead">Flask-specific adapters only. Same ecosystem boundaries as Django and FastAPI.</p>
-        <p class="pkg">uploadkit-flask</p>
-        <p class="section-note">Coming soon — adapters and response helpers only.</p>
+        <p class="section-lead">Thin integration over Core. Adapts Werkzeug <code>FileStorage</code> and maps errors to JSON. Pair with <code>uploadkit-security</code>. Python 3.10+, Flask 3.0+.</p>
+
+        <h2>Install</h2>
+          <div class="tabs nested-tabs install-tabs" data-tabs="install-flask">
+            <div class="tab-bar" role="tablist" aria-label="Install with">
+              <button type="button" class="tab-btn active" data-tab="install-flask-pip" role="tab" aria-selected="true">pip</button>
+              <button type="button" class="tab-btn" data-tab="install-flask-uv" role="tab" aria-selected="false">uv</button>
+              <button type="button" class="tab-btn" data-tab="install-flask-poetry" role="tab" aria-selected="false">poetry</button>
+            </div>
+            <div id="install-flask-pip" class="tab-panel active" role="tabpanel">
+          <figure class="code-block code-block--console">
+            <figcaption class="code-block-caption">
+              <code>Shell</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-bash">pip install uploadkit-flask uploadkit-security</code></pre>
+            </div>
+          </figure>
+            </div>
+            <div id="install-flask-uv" class="tab-panel" role="tabpanel">
+          <figure class="code-block code-block--console">
+            <figcaption class="code-block-caption">
+              <code>Shell</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-bash">uv add uploadkit-flask uploadkit-security</code></pre>
+            </div>
+          </figure>
+            </div>
+            <div id="install-flask-poetry" class="tab-panel" role="tabpanel">
+          <figure class="code-block code-block--console">
+            <figcaption class="code-block-caption">
+              <code>Shell</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-bash">poetry add uploadkit-flask uploadkit-security</code></pre>
+            </div>
+          </figure>
+            </div>
+          </div>
+
+        <h2>Adapter glue</h2>
+        <p class="section-note">Policy setup, validators, <code>UploaderError</code>, and the JSON response shape are shared — see <a href="/docs/patterns/">Common patterns</a>.</p>
+
+        <div class="tabs nested-tabs" data-tabs="flask-inner">
+          <div class="tab-bar" role="tablist" aria-label="Flask examples">
+            <button type="button" class="tab-btn active" data-tab="tab-flask-view" role="tab" aria-selected="true">Route</button>
+            <button type="button" class="tab-btn" data-tab="tab-flask-settings" role="tab" aria-selected="false">Config</button>
+          </div>
+
+          <div id="tab-flask-view" class="tab-panel active" role="tabpanel">
+            <p class="section-note">Uses <code>get_storage_provider()</code> → <code>Boto3S3Storage</code> (AWS S3 or MinIO) and <code>as_uploadable()</code>.</p>
+          <figure class="code-block">
+            <figcaption class="code-block-caption">
+              <code>views.py</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-python">from flask import current_app, jsonify, request
+from uploadkit import Uploader, UploadPolicy, UploaderError
+from uploadkit_flask import as_uploadable, get_storage_provider, json_error_response
+from uploadkit_security import default_validators
+
+@app.post("/upload")
+def upload_view():
+    storage = get_storage_provider()
+    policy = UploadPolicy(
+        max_size=5 * 1024 * 1024,
+        allowed_extensions=frozenset({"png"}),
+        allowed_mime_types=frozenset({"image/png"}),
+        validators=default_validators(),
+    )
+    uploaded = request.files["file"]
+    try:
+        result = Uploader(policy, storage).upload(
+            as_uploadable(uploaded),
+            bucket=current_app.config["UPLOADKIT_BUCKET"],
+            object_name=uploaded.filename,
+        )
+    except UploaderError as exc:
+        return json_error_response(exc)
+    return jsonify({
+        "object_name": result.object_name,
+        "sha256": result.sha256,
+        "etag": result.etag,
+    })</code></pre>
+            </div>
+          </figure>
+          </div>
+
+          <div id="tab-flask-settings" class="tab-panel" role="tabpanel">
+            <p class="section-note">AWS: leave <code>AWS_S3_ENDPOINT_URL</code> unset. MinIO: set it to your endpoint.</p>
+          <figure class="code-block">
+            <figcaption class="code-block-caption">
+              <code>app.config + storage.py</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-python"># app.config — AWS S3
+app.config["AWS_ACCESS_KEY_ID"] = "AKIA..."
+app.config["AWS_SECRET_ACCESS_KEY"] = "..."
+app.config["AWS_S3_REGION_NAME"] = "eu-west-1"
+app.config["UPLOADKIT_STORAGE_PROVIDER"] = "myapp.storage.get_provider"
+app.config["UPLOADKIT_BUCKET"] = "my-prod-bucket"
+
+# app.config — MinIO (instead of / in addition to keys)
+# app.config["AWS_S3_ENDPOINT_URL"] = "http://127.0.0.1:9000"
+# app.config["AWS_ACCESS_KEY_ID"] = "minioadmin"
+# app.config["AWS_SECRET_ACCESS_KEY"] = "minioadmin"
+
+# myapp/storage.py — Boto3S3Storage + get_provider()
+# (full class in /docs/storage/)
+def get_provider():
+    from flask import current_app
+    return Boto3S3Storage(
+        access_key=current_app.config["AWS_ACCESS_KEY_ID"],
+        secret_key=current_app.config["AWS_SECRET_ACCESS_KEY"],
+        region=current_app.config.get("AWS_S3_REGION_NAME", "us-east-1"),
+        endpoint_url=current_app.config.get("AWS_S3_ENDPOINT_URL"),
+    )</code></pre>
+            </div>
+          </figure>
+          </div>
+        </div>
+
+        <p class="section-note">
+          Full <code>Boto3S3Storage</code> class:
+          <a href="/docs/storage/">Storage</a>
+          ·
+          <a href="https://github.com/uploadkit/uploadkit-flask" target="_blank" rel="noopener">uploadkit-flask README</a>
+        </p>
 
       </article>
     </main>

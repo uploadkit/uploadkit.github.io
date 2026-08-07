@@ -6,7 +6,9 @@ Public documentation site for [UploadKit](https://uploadkit.github.io/) — modu
 
 - `/` — marketing landing
 - `/docs/` — getting started and guides (sidebar + Pagefind search)
+- `/docs/cli/` — developer CLI
 - `/docs/core/`, `/docs/django/`, `/docs/fastapi/`, `/docs/aiohttp/`, `/docs/odoo/`, `/docs/flask/`
+- `/docs/pdf/`, `/docs/office/`, `/docs/audio/` — feature packages
 - `/docs/patterns/` — shared policy, validators, errors, JSON shape
 - `/docs/storage/` — boto3 / aioboto3 for AWS S3 and MinIO
 - `/docs/performance/` — chunk size, S3 part size, and workers by file size

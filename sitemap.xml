@@ -36,6 +36,26 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://uploadkit.github.io/docs/cli/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uploadkit.github.io/docs/pdf/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uploadkit.github.io/docs/office/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uploadkit.github.io/docs/audio/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://uploadkit.github.io/docs/django/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

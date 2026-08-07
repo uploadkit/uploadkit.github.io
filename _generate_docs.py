@@ -58,6 +58,7 @@ HEAD = """<!DOCTYPE html>
         <p class="docs-nav-label">Start</p>
         <ul class="docs-nav">
           <li><a href="/docs/"{active_getting}>Getting started</a></li>
+          <li><a href="/docs/cli/"{active_cli}>CLI</a></li>
         </ul>
       </div>
       <div class="docs-nav-group">
@@ -68,6 +69,14 @@ HEAD = """<!DOCTYPE html>
           <li><a href="/docs/storage/"{active_storage}>Storage</a></li>
           <li><a href="/docs/performance/"{active_performance}>Performance</a></li>
           <li><a href="/docs/security/"{active_security}>Security</a></li>
+        </ul>
+      </div>
+      <div class="docs-nav-group">
+        <p class="docs-nav-label">Features</p>
+        <ul class="docs-nav">
+          <li><a href="/docs/pdf/"{active_pdf}>PDF</a></li>
+          <li><a href="/docs/office/"{active_office}>Office</a></li>
+          <li><a href="/docs/audio/"{active_audio}>Audio</a></li>
         </ul>
       </div>
       <div class="docs-nav-group">
@@ -107,11 +116,15 @@ HEAD = """<!DOCTYPE html>
 
 ACTIVE_KEYS = (
     "getting",
+    "cli",
     "core",
     "patterns",
     "storage",
     "performance",
     "security",
+    "pdf",
+    "office",
+    "audio",
     "django",
     "fastapi",
     "aiohttp",
@@ -229,6 +242,12 @@ GETTING = f"""
           <li><a href="/docs/patterns/">Common patterns</a> — policy, validators, errors, JSON shape</li>
           <li><a href="/docs/django/">Django</a>, <a href="/docs/fastapi/">FastAPI</a>, <a href="/docs/aiohttp/">aiohttp</a>, or <a href="/docs/odoo/">Odoo</a> — adapter glue</li>
           <li><a href="/docs/security/">Security</a> — <code>uploadkit-security</code> and libmagic</li>
+          <li>Feature packages —
+            <a href="/docs/pdf/">PDF</a>,
+            <a href="/docs/office/">Office</a>,
+            <a href="/docs/audio/">Audio</a>
+          </li>
+          <li><a href="/docs/cli/">CLI</a> — validate, inspect, and simulate uploads locally</li>
         </ul>
 """
 
@@ -1629,9 +1648,156 @@ SECURITY = f"""
         </p>
 """
 
+CLI_COMMANDS = """uploadkit validate path/to/file.pdf -e pdf
+uploadkit inspect path/to/file.docx
+uploadkit simulate path/to/file.wav --policy audio --json
+uploadkit policies list
+uploadkit doctor"""
+
+CLI = f"""
+        <h1>CLI</h1>
+        <p class="section-lead"><code>uploadkit-cli</code> is a local debug surface for composing Core + security + feature-package validators without writing app code. Use it during development and CI to lint fixture uploads — not as a production upload gateway.</p>
+
+        <h2>Install</h2>
+{install_tabs(
+    "cli",
+    "pip install uploadkit-cli\n# optional feature extras:\n# pip install 'uploadkit-cli[pdf,office,audio]'\n# pip install 'uploadkit-cli[all]'",
+    "uv add uploadkit-cli\n# uv add 'uploadkit-cli[all]'",
+    "poetry add uploadkit-cli\n# poetry add uploadkit-cli -E all",
+)}
+
+        <h2>Commands</h2>
+{code_block("Shell", "bash", CLI_COMMANDS, console=True)}
+        <p class="section-note">Exit code <code>1</code> on validation failure (CI-friendly with <code>--json</code>).</p>
+
+        <p class="section-note">
+          Feature validators:
+          <a href="/docs/pdf/">PDF</a>,
+          <a href="/docs/office/">Office</a>,
+          <a href="/docs/audio/">Audio</a>.
+          Full reference:
+          <a href="https://github.com/uploadkit/uploadkit-cli" target="_blank" rel="noopener">uploadkit-cli README</a>.
+        </p>
+"""
+
+PDF_QUICKSTART = """from uploadkit import Uploader
+from uploadkit_pdf import PdfPolicy
+
+uploader = Uploader(PdfPolicy(max_size=5 * 1024 * 1024, max_pages=50), storage=my_storage)"""
+
+PDF_CUSTOMIZE = """from uploadkit import UploadPolicy
+from uploadkit_pdf import default_pdf_validators, PdfPageLimitValidator
+
+policy = UploadPolicy(
+    allowed_extensions=frozenset({"pdf"}),
+    allowed_mime_types=frozenset({"application/pdf"}),
+    validators=default_pdf_validators(max_pages=20, exclude=PdfPageLimitValidator),
+)"""
+
+PDF_INSPECT = """from uploadkit_pdf import inspect_pdf
+
+meta = inspect_pdf(open("doc.pdf", "rb").read())
+print(meta.page_count, meta.encrypted, meta.has_javascript)"""
+
+PDF = f"""
+        <h1>PDF</h1>
+        <p class="section-lead"><code>uploadkit-pdf</code> adds PDF structure, security, and page-limit checks that plug into <code>UploadPolicy.validators</code> without modifying UploadKit Core. Do not use it to render, edit, merge, or OCR PDFs — put generic MIME/filename checks in <a href="/docs/security/">Security</a>.</p>
+
+        <h2>Install</h2>
+{install_tabs(
+    "pdf",
+    "pip install uploadkit-pdf",
+    "uv add uploadkit-pdf",
+    "poetry add uploadkit-pdf",
+)}
+
+        <h2>Quick start</h2>
+{code_block("upload.py", "python", PDF_QUICKSTART)}
+
+        <h2>Customize validators</h2>
+{code_block("policy.py", "python", PDF_CUSTOMIZE)}
+        <p class="section-note">Async pipelines use <code>default_async_pdf_validators</code> and the <code>AsyncPdf*</code> validator classes on <code>async_validators</code>.</p>
+
+        <h2>Inspect metadata</h2>
+{code_block("inspect.py", "python", PDF_INSPECT)}
+
+        <p class="section-note">
+          Shared policy and error conventions:
+          <a href="/docs/patterns/">Common patterns</a>.
+          Full reference:
+          <a href="https://github.com/uploadkit/uploadkit-pdf" target="_blank" rel="noopener">uploadkit-pdf README</a>.
+        </p>
+"""
+
+OFFICE_QUICKSTART = """from uploadkit import Uploader
+from uploadkit_office import DocxPolicy, OfficePolicy, OfficeKind
+
+uploader = Uploader(DocxPolicy(max_size=10 * 1024 * 1024), storage=my_storage)
+
+# Or allow multiple kinds:
+policy = OfficePolicy(kinds=frozenset({OfficeKind.DOCX, OfficeKind.XLSX}))"""
+
+OFFICE = f"""
+        <h1>Office</h1>
+        <p class="section-lead"><code>uploadkit-office</code> checks OOXML/ODF structure and security (macros, external links, embeds) for DOCX, XLSX, PPTX, ODT, and ODS. No extra native dependencies (stdlib <code>zipfile</code> + XML). Do not edit or convert documents here — put generic MIME/filename checks in <a href="/docs/security/">Security</a>.</p>
+
+        <h2>Install</h2>
+{install_tabs(
+    "office",
+    "pip install uploadkit-office",
+    "uv add uploadkit-office",
+    "poetry add uploadkit-office",
+)}
+
+        <h2>Quick start</h2>
+{code_block("upload.py", "python", OFFICE_QUICKSTART)}
+        <p class="section-note">Async pipelines use <code>default_async_office_validators</code> and the <code>AsyncOffice*</code> validator classes on <code>async_validators</code>.</p>
+
+        <p class="section-note">
+          Shared policy and error conventions:
+          <a href="/docs/patterns/">Common patterns</a>.
+          Full reference:
+          <a href="https://github.com/uploadkit/uploadkit-office" target="_blank" rel="noopener">uploadkit-office README</a>.
+        </p>
+"""
+
+AUDIO_QUICKSTART = """from uploadkit import Uploader
+from uploadkit_audio import AudioPolicy
+
+uploader = Uploader(
+    AudioPolicy(max_duration_sec=600, allowed_codecs=frozenset({"mp3", "wav"})),
+    storage=my_storage,
+)"""
+
+AUDIO = f"""
+        <h1>Audio</h1>
+        <p class="section-lead"><code>uploadkit-audio</code> adds codec, duration, and structural checks for MP3, WAV, FLAC, OGG/Opus, M4A/AAC, and WebM uploads. Do not transcode or generate waveforms here — put generic MIME/filename checks in <a href="/docs/security/">Security</a>.</p>
+
+        <h2>Install</h2>
+{install_tabs(
+    "audio",
+    "pip install uploadkit-audio",
+    "uv add uploadkit-audio",
+    "poetry add uploadkit-audio",
+)}
+
+        <h2>Quick start</h2>
+{code_block("upload.py", "python", AUDIO_QUICKSTART)}
+        <p class="section-note">Async pipelines use <code>default_async_audio_validators</code> and the <code>AsyncAudio*</code> validator classes on <code>async_validators</code>.</p>
+
+        <p class="section-note">
+          Shared policy and error conventions:
+          <a href="/docs/patterns/">Common patterns</a>.
+          Full reference:
+          <a href="https://github.com/uploadkit/uploadkit-audio" target="_blank" rel="noopener">uploadkit-audio README</a>.
+        </p>
+"""
+
+
 def main() -> None:
     pages = [
         ("docs/index.html", "Getting started — UploadKit", "Install UploadKit and choose a framework guide.", "/docs/", "getting", GETTING),
+        ("docs/cli/index.html", "CLI — UploadKit", "Developer CLI for UploadKit validation, inspection, and simulation.", "/docs/cli/", "cli", CLI),
         ("docs/core/index.html", "Core — UploadKit", "Framework-free upload orchestration with Uploader and AsyncUploader.", "/docs/core/", "core", CORE),
         ("docs/django/index.html", "Django — UploadKit", "Django adapters and response helpers for UploadKit.", "/docs/django/", "django", DJANGO),
         ("docs/fastapi/index.html", "FastAPI — UploadKit", "FastAPI adapters, BackgroundTasks, and async/sync helpers.", "/docs/fastapi/", "fastapi", FASTAPI),
@@ -1642,6 +1808,9 @@ def main() -> None:
         ("docs/storage/index.html", "Storage — UploadKit", "BYO S3-compatible storage with boto3 and aioboto3 for AWS S3 and MinIO.", "/docs/storage/", "storage", STORAGE),
         ("docs/performance/index.html", "Performance — UploadKit", "Choose chunk size, S3 part size, and workers by file size and concurrency.", "/docs/performance/", "performance", PERFORMANCE),
         ("docs/security/index.html", "Security — UploadKit", "uploadkit-security validators and libmagic system requirements.", "/docs/security/", "security", SECURITY),
+        ("docs/pdf/index.html", "PDF — UploadKit", "PDF structure, security, and page-limit validators for UploadKit.", "/docs/pdf/", "pdf", PDF),
+        ("docs/office/index.html", "Office — UploadKit", "OOXML/ODF structure and security validators for UploadKit.", "/docs/office/", "office", OFFICE),
+        ("docs/audio/index.html", "Audio — UploadKit", "Audio codec, duration, and structure validators for UploadKit.", "/docs/audio/", "audio", AUDIO),
     ]
     for rel, title, desc, canonical, current, content in pages:
         write_page(rel, title=title, description=desc, canonical=canonical, current=current, content=content)

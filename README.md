@@ -78,6 +78,29 @@ In the repo **Settings → Pages**, set source to **GitHub Actions** (not “Dep
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/uploadkit/uploadkit-odoo/blob/main/pyproject.toml)
 [![Odoo](https://img.shields.io/badge/odoo-17%20%7C%2018-purple)](https://github.com/uploadkit/uploadkit-odoo)
 
+### uploadkit-pdf
+
+[![CI](https://github.com/uploadkit/uploadkit-pdf/actions/workflows/ci.yml/badge.svg)](https://github.com/uploadkit/uploadkit-pdf/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)](https://github.com/uploadkit/uploadkit-pdf/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/uploadkit/uploadkit-pdf/blob/main/pyproject.toml)
+
+### uploadkit-audio
+
+[![CI](https://github.com/uploadkit/uploadkit-audio/actions/workflows/ci.yml/badge.svg)](https://github.com/uploadkit/uploadkit-audio/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)](https://github.com/uploadkit/uploadkit-audio/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/uploadkit/uploadkit-audio/blob/main/pyproject.toml)
+
+### uploadkit-office
+
+[![CI](https://github.com/uploadkit/uploadkit-office/actions/workflows/ci.yml/badge.svg)](https://github.com/uploadkit/uploadkit-office/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-79%25-yellow)](https://github.com/uploadkit/uploadkit-office/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/uploadkit/uploadkit-office/blob/main/pyproject.toml)
+
+### uploadkit-cli
+
+[![CI](https://github.com/uploadkit/uploadkit-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/uploadkit/uploadkit-cli/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/uploadkit/uploadkit-cli/blob/main/pyproject.toml)
+
 ## Links
 
 - Site: https://uploadkit.github.io/

@@ -51,6 +51,12 @@ In the repo **Settings → Pages**, set source to **GitHub Actions** (not “Dep
 
 ## Package status
 
+Coverage badges on **feature packages** (pdf / audio / office) and **cli** are
+**measured** totals, not the 100% figures used by Core and framework adapters.
+Gaps are mostly `metadata.py` edge cases (malformed inputs, rare security /
+format branches) and CLI flag/error paths. Feature-package CI gates at 80%
+where configured; cli has no coverage gate yet, so it shows CI + Python only.
+
 ### uploadkit (core)
 
 [![CI](https://github.com/uploadkit/uploadkit/actions/workflows/ci.yml/badge.svg)](https://github.com/uploadkit/uploadkit/actions/workflows/ci.yml)

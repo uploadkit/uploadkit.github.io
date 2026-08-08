@@ -156,6 +156,9 @@ from uploadkit import Uploader, UploadPolicy, UploaderError
 from uploadkit_django import as_uploadable, get_storage_provider, json_error_response
 from uploadkit_security import default_validators
 
+def notify(result):
+    ...
+
 def upload_view(request):
     storage = get_storage_provider()
     policy = UploadPolicy(
@@ -170,6 +173,7 @@ def upload_view(request):
             as_uploadable(uploaded),
             bucket=settings.UPLOADKIT_BUCKET,
             object_name=uploaded.name,
+            after_upload=notify,  # or Celery-like .delay
         )
     except UploaderError as exc:
         return json_error_response(exc)
@@ -218,6 +222,8 @@ def get_provider():
         </div>
 
         <p class="section-note">
+          After-upload hooks: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full <code>Boto3S3Storage</code> class:
           <a href="/docs/storage/">Storage</a>
           ·

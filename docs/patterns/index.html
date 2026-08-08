@@ -120,6 +120,52 @@ async_policy = UploadPolicy(
             </div>
           </figure>
 
+        <h2>After-upload hooks</h2>
+        <p>Pass optional <code>after_upload</code> to <code>Uploader.upload</code> / <code>AsyncUploader.upload</code>. The hook runs <strong>once</strong> after a successful store, before returning <code>UploadResult</code>. It does <strong>not</strong> run on validation or storage failure. Hook exceptions <strong>propagate</strong> (not swallowed).</p>
+        <p>Accepted shapes:</p>
+        <ul>
+          <li><strong>Sync callback</strong> — <code>(result: UploadResult) -&gt; None</code></li>
+          <li><strong>Async callback</strong> — sync or <code>async def</code> on <code>AsyncUploader</code> (awaited)</li>
+          <li><strong>Celery-like</strong> — object with <code>.delay(**kwargs)</code>; Core calls <code>delay(**result.as_task_kwargs())</code> (no Celery import)</li>
+          <li><strong>FastAPI</strong> — <code>background_after_upload(background_tasks, notify)</code> from <code>uploadkit-fastapi</code></li>
+        </ul>
+          <figure class="code-block">
+            <figcaption class="code-block-caption">
+              <code>after_upload.py</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-python">def notify(result):
+    # result.bucket, object_name, original_name, mime_type,
+    # extension, size, sha256, etag
+    ...
+
+# Sync Uploader — callback or Celery-like .delay
+Uploader(policy, storage).upload(
+    file,
+    bucket="uploads",
+    object_name="a.png",
+    after_upload=notify,  # or process_upload (has .delay)
+)
+
+# AsyncUploader — sync/async callback (awaited) or .delay
+await AsyncUploader(policy, async_storage).upload(
+    source,
+    bucket="uploads",
+    object_name="a.png",
+    after_upload=notify,
+)
+
+# FastAPI — schedule via BackgroundTasks after the response
+from uploadkit_fastapi import background_after_upload
+after_upload=background_after_upload(background_tasks, notify)
+
+# Celery kwargs mirror UploadResult.as_task_kwargs():
+# bucket, object_name, original_name, mime_type, extension, size, sha256, etag</code></pre>
+            </div>
+          </figure>
+        <p class="section-note">See also <a href="/docs/core/">Core</a> and <a href="/docs/fastapi/">FastAPI</a>.</p>
+
         <h2>Error handling</h2>
         <p>Catch <code>UploaderError</code>. Django, FastAPI, Flask, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>
           <figure class="code-block">

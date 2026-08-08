@@ -292,8 +292,14 @@ policy = UploadPolicy(
     allowed_mime_types=frozenset({"image/png", "image/jpeg"}),
     validators=default_validators(),
 )
+def notify(result):
+    ...
+
 result = Uploader(policy, storage).upload(
-    file, bucket="uploads", object_name="2026/file.png",
+    file,
+    bucket="uploads",
+    object_name="2026/file.png",
+    after_upload=notify,  # or Celery-like .delay
 )"""
 
 CORE_ASYNC = """from uploadkit import AsyncUploader, UploadPolicy
@@ -317,10 +323,33 @@ policy = UploadPolicy(
     allowed_mime_types=frozenset({"image/png", "image/jpeg"}),
     async_validators=default_async_validators(),
 )
+
+async def notify(result):
+    ...
+
 result = await AsyncUploader(policy, async_storage).upload(
     source,  # AsyncByteSource
     bucket="uploads",
     object_name="2026/file.png",
+    after_upload=notify,  # sync, async, or Celery-like .delay
+)"""
+
+CORE_AFTER_UPLOAD = """def notify(result):
+    ...
+
+# Sync callback
+Uploader(policy, storage).upload(
+    file, bucket="uploads", object_name="a.png", after_upload=notify,
+)
+
+# Celery-like — Core calls task.delay(**result.as_task_kwargs())
+Uploader(policy, storage).upload(
+    file, bucket="uploads", object_name="a.png", after_upload=process_upload,
+)
+
+# AsyncUploader — sync or async callback (awaited), or .delay
+await AsyncUploader(policy, async_storage).upload(
+    source, bucket="uploads", object_name="a.png", after_upload=notify,
 )"""
 
 CORE = f"""
@@ -336,7 +365,7 @@ CORE = f"""
 )}
 
         <h2>Examples</h2>
-        <p class="section-note">Shared <code>UploadPolicy</code>, validators, and error handling are documented in <a href="/docs/patterns/">Common patterns</a>.</p>
+        <p class="section-note">Shared <code>UploadPolicy</code>, validators, after-upload hooks, and error handling are documented in <a href="/docs/patterns/">Common patterns</a>.</p>
 
         <div class="tabs nested-tabs" data-tabs="core-inner">
           <div class="tab-bar" role="tablist" aria-label="Core examples">
@@ -354,6 +383,11 @@ CORE = f"""
 {code_block("example_async.py", "python", CORE_ASYNC)}
           </div>
         </div>
+
+        <h2>After-upload hooks</h2>
+        <p>Optional <code>after_upload</code> on <code>Uploader.upload</code> / <code>AsyncUploader.upload</code> runs <strong>once</strong> after a successful store, before returning <code>UploadResult</code>. It does not run on validation or storage failure. Hook exceptions <strong>propagate</strong>.</p>
+        <p class="section-note">Shapes: sync callback, async callback (<code>AsyncUploader</code> awaits), or Celery-like <code>.delay(**result.as_task_kwargs())</code>. Full shared write-up: <a href="/docs/patterns/">Common patterns</a>.</p>
+{code_block("after_upload.py", "python", CORE_AFTER_UPLOAD)}
 
         <p class="section-note">
           Storage providers:
@@ -375,6 +409,9 @@ from uploadkit import Uploader, UploadPolicy, UploaderError
 from uploadkit_django import as_uploadable, get_storage_provider, json_error_response
 from uploadkit_security import default_validators
 
+def notify(result):
+    ...
+
 def upload_view(request):
     storage = get_storage_provider()
     policy = UploadPolicy(
@@ -389,6 +426,7 @@ def upload_view(request):
             as_uploadable(uploaded),
             bucket=settings.UPLOADKIT_BUCKET,
             object_name=uploaded.name,
+            after_upload=notify,  # or Celery-like .delay
         )
     except UploaderError as exc:
         return json_error_response(exc)
@@ -454,6 +492,8 @@ DJANGO = f"""
         </div>
 
         <p class="section-note">
+          After-upload hooks: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full <code>Boto3S3Storage</code> class:
           <a href="/docs/storage/">Storage</a>
           ·
@@ -577,8 +617,16 @@ FASTAPI = f"""
           </div>
         </div>
 
+        <h2>After-upload options</h2>
+        <p>Pass Core <code>after_upload</code> on <code>Uploader.upload</code> / <code>AsyncUploader.upload</code>. The hook runs once after a successful put.</p>
+        <ol>
+          <li><strong>BackgroundTasks</strong> — <code>background_after_upload(background_tasks, notify)</code> schedules work after the response is sent.</li>
+          <li><strong>Celery-like</strong> — object with <code>.delay(**kwargs)</code>; Core calls <code>delay(**result.as_task_kwargs())</code>.</li>
+          <li><strong>Plain callback</strong> — sync <code>(result) -&gt; None</code>, or <code>async def</code> on the async stack (awaited). Exceptions propagate and fail the request.</li>
+        </ol>
         <p class="section-note">
-          After-upload: <code>BackgroundTasks</code>, Celery-like <code>.delay</code>, or a plain callback.
+          Shared semantics: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full storage classes:
           <a href="/docs/storage/">Storage</a>
           ·
@@ -637,7 +685,7 @@ async def upload_handler(request: web.Request) -> web.Response:
             AiohttpByteSource(part),
             bucket="uploads",
             object_name=part.filename,
-            after_upload=notify,  # sync, async, or Celery-like .delay
+            after_upload=notify,  # sync callback, async callback, or Celery-like .delay
         )
     except UploaderError as exc:
         return web.json_response(
@@ -655,6 +703,7 @@ from handlers import upload_handler
 # from myapp.s3_async import AsyncS3Storage  # see /docs/storage/
 
 async def notify(result) -> None:
+    # Or pass a sync def, or a Celery-like task with .delay
     ...
 
 # AWS:
@@ -713,6 +762,8 @@ AIOHTTP = f"""
 
         <p class="section-note">
           Same Core async stack as FastAPI — only the <code>AsyncByteSource</code> adapter differs.
+          After-upload: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Storage:
           <a href="/docs/storage/">Storage</a>
           ·
@@ -726,6 +777,10 @@ from odoo.http import request
 from uploadkit import Uploader, UploadPolicy, UploaderError
 from uploadkit_odoo import as_uploadable, json_error_response
 from uploadkit_security import default_validators
+
+
+def notify(result):
+    ...
 
 
 class MyController(http.Controller):
@@ -744,6 +799,7 @@ class MyController(http.Controller):
                 as_uploadable(uploaded),
                 bucket="uploads",
                 object_name=uploaded.filename,
+                after_upload=notify,  # or Celery-like .delay
             )
         except UploaderError as exc:
             return json_error_response(exc)
@@ -799,7 +855,8 @@ result = env["uploadkit.service"].upload(
     file_storage,
     object_name="docs/a.pdf",
 )
-# result is UploadResult.as_task_kwargs()
+# result is UploadResult.as_task_kwargs() — no after_upload parameter
+# Enqueue from the dict, or call Uploader.upload(..., after_upload=...) yourself
 
 # Or POST multipart to /uploadkit/upload (auth=user, CSRF)
 # field: file  |  optional: object_name"""
@@ -843,6 +900,8 @@ ODOO = f"""
         </div>
 
         <p class="section-note">
+          After-upload on library controllers: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full <code>Boto3S3Storage</code> class:
           <a href="/docs/storage/">Storage</a>
           ·
@@ -854,6 +913,9 @@ FLASK_VIEW = """from flask import current_app, jsonify, request
 from uploadkit import Uploader, UploadPolicy, UploaderError
 from uploadkit_flask import as_uploadable, get_storage_provider, json_error_response
 from uploadkit_security import default_validators
+
+def notify(result):
+    ...
 
 @app.post("/upload")
 def upload_view():
@@ -870,6 +932,7 @@ def upload_view():
             as_uploadable(uploaded),
             bucket=current_app.config["UPLOADKIT_BUCKET"],
             object_name=uploaded.filename,
+            after_upload=notify,  # or Celery-like .delay
         )
     except UploaderError as exc:
         return json_error_response(exc)
@@ -942,6 +1005,8 @@ FLASK = f"""
         </ul>
 
         <p class="section-note">
+          After-upload hooks: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full <code>Boto3S3Storage</code> class:
           <a href="/docs/storage/">Storage</a>
           ·
@@ -990,6 +1055,34 @@ PATTERNS_JSON = """{
   "etag": "…"
 }"""
 
+PATTERNS_AFTER_UPLOAD = """def notify(result):
+    # result.bucket, object_name, original_name, mime_type,
+    # extension, size, sha256, etag
+    ...
+
+# Sync Uploader — callback or Celery-like .delay
+Uploader(policy, storage).upload(
+    file,
+    bucket="uploads",
+    object_name="a.png",
+    after_upload=notify,  # or process_upload (has .delay)
+)
+
+# AsyncUploader — sync/async callback (awaited) or .delay
+await AsyncUploader(policy, async_storage).upload(
+    source,
+    bucket="uploads",
+    object_name="a.png",
+    after_upload=notify,
+)
+
+# FastAPI — schedule via BackgroundTasks after the response
+from uploadkit_fastapi import background_after_upload
+after_upload=background_after_upload(background_tasks, notify)
+
+# Celery kwargs mirror UploadResult.as_task_kwargs():
+# bucket, object_name, original_name, mime_type, extension, size, sha256, etag"""
+
 PATTERNS = f"""
         <h1>Common patterns</h1>
         <p class="section-lead">Shared pieces used across Core and every framework guide. Framework pages only show adapter glue; put these conventions here once.</p>
@@ -997,6 +1090,18 @@ PATTERNS = f"""
         <h2>UploadPolicy</h2>
         <p>Size, extension, and MIME allow-lists live on the policy. Attach sync or async validators from <code>uploadkit-security</code>.</p>
 {code_block("policy.py", "python", PATTERNS_POLICY)}
+
+        <h2>After-upload hooks</h2>
+        <p>Pass optional <code>after_upload</code> to <code>Uploader.upload</code> / <code>AsyncUploader.upload</code>. The hook runs <strong>once</strong> after a successful store, before returning <code>UploadResult</code>. It does <strong>not</strong> run on validation or storage failure. Hook exceptions <strong>propagate</strong> (not swallowed).</p>
+        <p>Accepted shapes:</p>
+        <ul>
+          <li><strong>Sync callback</strong> — <code>(result: UploadResult) -&gt; None</code></li>
+          <li><strong>Async callback</strong> — sync or <code>async def</code> on <code>AsyncUploader</code> (awaited)</li>
+          <li><strong>Celery-like</strong> — object with <code>.delay(**kwargs)</code>; Core calls <code>delay(**result.as_task_kwargs())</code> (no Celery import)</li>
+          <li><strong>FastAPI</strong> — <code>background_after_upload(background_tasks, notify)</code> from <code>uploadkit-fastapi</code></li>
+        </ul>
+{code_block("after_upload.py", "python", PATTERNS_AFTER_UPLOAD)}
+        <p class="section-note">See also <a href="/docs/core/">Core</a> and <a href="/docs/fastapi/">FastAPI</a>.</p>
 
         <h2>Error handling</h2>
         <p>Catch <code>UploaderError</code>. Django, FastAPI, Flask, and Odoo ship <code>json_error_response</code>; aiohttp (and custom stacks) map to the same JSON shape manually.</p>

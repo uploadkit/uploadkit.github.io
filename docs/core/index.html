@@ -136,7 +136,7 @@
           </div>
 
         <h2>Examples</h2>
-        <p class="section-note">Shared <code>UploadPolicy</code>, validators, and error handling are documented in <a href="/docs/patterns/">Common patterns</a>.</p>
+        <p class="section-note">Shared <code>UploadPolicy</code>, validators, after-upload hooks, and error handling are documented in <a href="/docs/patterns/">Common patterns</a>.</p>
 
         <div class="tabs nested-tabs" data-tabs="core-inner">
           <div class="tab-bar" role="tablist" aria-label="Core examples">
@@ -193,8 +193,14 @@ policy = UploadPolicy(
     allowed_mime_types=frozenset({"image/png", "image/jpeg"}),
     validators=default_validators(),
 )
+def notify(result):
+    ...
+
 result = Uploader(policy, storage).upload(
-    file, bucket="uploads", object_name="2026/file.png",
+    file,
+    bucket="uploads",
+    object_name="2026/file.png",
+    after_upload=notify,  # or Celery-like .delay
 )</code></pre>
             </div>
           </figure>
@@ -229,15 +235,49 @@ policy = UploadPolicy(
     allowed_mime_types=frozenset({"image/png", "image/jpeg"}),
     async_validators=default_async_validators(),
 )
+
+async def notify(result):
+    ...
+
 result = await AsyncUploader(policy, async_storage).upload(
     source,  # AsyncByteSource
     bucket="uploads",
     object_name="2026/file.png",
+    after_upload=notify,  # sync, async, or Celery-like .delay
 )</code></pre>
             </div>
           </figure>
           </div>
         </div>
+
+        <h2>After-upload hooks</h2>
+        <p>Optional <code>after_upload</code> on <code>Uploader.upload</code> / <code>AsyncUploader.upload</code> runs <strong>once</strong> after a successful store, before returning <code>UploadResult</code>. It does not run on validation or storage failure. Hook exceptions <strong>propagate</strong>.</p>
+        <p class="section-note">Shapes: sync callback, async callback (<code>AsyncUploader</code> awaits), or Celery-like <code>.delay(**result.as_task_kwargs())</code>. Full shared write-up: <a href="/docs/patterns/">Common patterns</a>.</p>
+          <figure class="code-block">
+            <figcaption class="code-block-caption">
+              <code>after_upload.py</code>
+              <button type="button" class="copy-btn" aria-label="Copy">Copy</button>
+            </figcaption>
+            <div class="code-block-body">
+              <pre><code class="language-python">def notify(result):
+    ...
+
+# Sync callback
+Uploader(policy, storage).upload(
+    file, bucket="uploads", object_name="a.png", after_upload=notify,
+)
+
+# Celery-like — Core calls task.delay(**result.as_task_kwargs())
+Uploader(policy, storage).upload(
+    file, bucket="uploads", object_name="a.png", after_upload=process_upload,
+)
+
+# AsyncUploader — sync or async callback (awaited), or .delay
+await AsyncUploader(policy, async_storage).upload(
+    source, bucket="uploads", object_name="a.png", after_upload=notify,
+)</code></pre>
+            </div>
+          </figure>
 
         <p class="section-note">
           Storage providers:

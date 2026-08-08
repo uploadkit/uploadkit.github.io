@@ -155,6 +155,9 @@ from uploadkit import Uploader, UploadPolicy, UploaderError
 from uploadkit_flask import as_uploadable, get_storage_provider, json_error_response
 from uploadkit_security import default_validators
 
+def notify(result):
+    ...
+
 @app.post("/upload")
 def upload_view():
     storage = get_storage_provider()
@@ -170,6 +173,7 @@ def upload_view():
             as_uploadable(uploaded),
             bucket=current_app.config["UPLOADKIT_BUCKET"],
             object_name=uploaded.filename,
+            after_upload=notify,  # or Celery-like .delay
         )
     except UploaderError as exc:
         return json_error_response(exc)
@@ -225,6 +229,8 @@ def get_provider():
         </ul>
 
         <p class="section-note">
+          After-upload hooks: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full <code>Boto3S3Storage</code> class:
           <a href="/docs/storage/">Storage</a>
           ·

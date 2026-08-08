@@ -213,7 +213,7 @@ async def upload_handler(request: web.Request) -&gt; web.Response:
             AiohttpByteSource(part),
             bucket="uploads",
             object_name=part.filename,
-            after_upload=notify,  # sync, async, or Celery-like .delay
+            after_upload=notify,  # sync callback, async callback, or Celery-like .delay
         )
     except UploaderError as exc:
         return web.json_response(
@@ -242,6 +242,7 @@ from handlers import upload_handler
 # from myapp.s3_async import AsyncS3Storage  # see /docs/storage/
 
 async def notify(result) -&gt; None:
+    # Or pass a sync def, or a Celery-like task with .delay
     ...
 
 # AWS:
@@ -266,6 +267,8 @@ if __name__ == "__main__":
 
         <p class="section-note">
           Same Core async stack as FastAPI — only the <code>AsyncByteSource</code> adapter differs.
+          After-upload: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Storage:
           <a href="/docs/storage/">Storage</a>
           ·

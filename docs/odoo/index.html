@@ -158,6 +158,10 @@ from uploadkit_odoo import as_uploadable, json_error_response
 from uploadkit_security import default_validators
 
 
+def notify(result):
+    ...
+
+
 class MyController(http.Controller):
     @http.route("/my/upload", type="http", auth="user", methods=["POST"], csrf=True)
     def upload(self, **kw):
@@ -174,6 +178,7 @@ class MyController(http.Controller):
                 as_uploadable(uploaded),
                 bucket="uploads",
                 object_name=uploaded.filename,
+                after_upload=notify,  # or Celery-like .delay
             )
         except UploaderError as exc:
             return json_error_response(exc)
@@ -251,7 +256,8 @@ result = env["uploadkit.service"].upload(
     file_storage,
     object_name="docs/a.pdf",
 )
-# result is UploadResult.as_task_kwargs()
+# result is UploadResult.as_task_kwargs() — no after_upload parameter
+# Enqueue from the dict, or call Uploader.upload(..., after_upload=...) yourself
 
 # Or POST multipart to /uploadkit/upload (auth=user, CSRF)
 # field: file  |  optional: object_name</code></pre>
@@ -261,6 +267,8 @@ result = env["uploadkit.service"].upload(
         </div>
 
         <p class="section-note">
+          After-upload on library controllers: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full <code>Boto3S3Storage</code> class:
           <a href="/docs/storage/">Storage</a>
           ·

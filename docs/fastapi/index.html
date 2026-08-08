@@ -249,8 +249,16 @@ async def upload_sync(file: UploadFile, background_tasks: BackgroundTasks):
           </div>
         </div>
 
+        <h2>After-upload options</h2>
+        <p>Pass Core <code>after_upload</code> on <code>Uploader.upload</code> / <code>AsyncUploader.upload</code>. The hook runs once after a successful put.</p>
+        <ol>
+          <li><strong>BackgroundTasks</strong> — <code>background_after_upload(background_tasks, notify)</code> schedules work after the response is sent.</li>
+          <li><strong>Celery-like</strong> — object with <code>.delay(**kwargs)</code>; Core calls <code>delay(**result.as_task_kwargs())</code>.</li>
+          <li><strong>Plain callback</strong> — sync <code>(result) -&gt; None</code>, or <code>async def</code> on the async stack (awaited). Exceptions propagate and fail the request.</li>
+        </ol>
         <p class="section-note">
-          After-upload: <code>BackgroundTasks</code>, Celery-like <code>.delay</code>, or a plain callback.
+          Shared semantics: <a href="/docs/patterns/">Common patterns</a>
+          ·
           Full storage classes:
           <a href="/docs/storage/">Storage</a>
           ·
